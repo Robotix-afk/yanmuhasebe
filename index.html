@@ -2893,13 +2893,6 @@ window.ymAlert = function(message, title) {
   });
 };
 
-    var footer = '<div class="ym-confirm-actions"><button type="button" class="btn btn-teal" id="ymConfOk">Tamam</button></div>';
-    openModal(title || 'Bilgi', '<div class="ym-confirm-msg">' + esc(String(message || '')) + '</div>', footer);
-    var ok = document.getElementById('ymConfOk');
-    if (ok) ok.onclick = function(e) { e.preventDefault(); window.__ymConfirmResolve = null; closeModal(); resolve(); };
-  });
-};
-
 
 /* ========== PAGES ========== */
 var pages = {};
@@ -4372,6 +4365,7 @@ window.istenCikar = function(id) {
   state._view = { detail: id };
   go('calisanlar');
   toast('İşten çıkarıldı');
+});
 };
 window.silCalisan = function(id) {
   return ymConfirm('Silinsin mi?',{title:'Sil',okText:'Sil',cancelText:'İptal',danger:true}).then(function(ok){if(!ok)return;
@@ -4795,7 +4789,7 @@ window.saveOzelFiyat = function() {
   state._view = {};
   go('ozelfiyat');
 };
-window.delOzelFiyat = function(id) { return ymConfirm('Silinsin mi?',{title:'Sil',okText:'Sil',cancelText:'İptal',danger:true}).then(function(ok){if(!ok)return; dbSet('ozelFiyatlar', dbGet('ozelFiyatlar').filter(function(x){ return x.id !== id; })); go('ozelfiyat'); };
+window.delOzelFiyat = function(id) { return ymConfirm('Silinsin mi?',{title:'Sil',okText:'Sil',cancelText:'İptal',danger:true}).then(function(ok){if(!ok)return; dbSet('ozelFiyatlar', dbGet('ozelFiyatlar').filter(function(x){ return x.id !== id; })); go('ozelfiyat'); }); };
 window.satisÜrünEkle = function() {
   var id = document.getElementById('sat_urun').value; if (!id) return toast('Ürün seçin');
   var u = dbGet('urunler').find(function(x){ return x.id === id; }); if (!u) return;
@@ -4803,7 +4797,6 @@ window.satisÜrünEkle = function() {
   if (cari) { var o = dbGet('ozelFiyatlar').find(function(x){ return x.urunId === id && x.musteriId === cari.id; });
     if (o) { fiyat = (Number(o.fiyat) || fiyat) * (1 - (Number(o.iskonto) || 0) / 100); toast('Özel fiyat uygulandı'); } }
   state._view.lines = state._view.lines || []; state._view.lines.push({ urunId: u.id, ad: u.ad, miktar: 1, fiyat: fiyat }); go('satislar');
-});
 };
 NAV.forEach(function(n){ if (n.children && n.label === 'Ürünler') { n.children.push({ id: 'stok', label: 'Stok Ekstresi' }, { id: 'ozelfiyat', label: 'Özel Fiyat Listesi' }); } });
 TITLES.stok = 'Stok Ekstresi'; TITLES.ozelfiyat = 'Özel Fiyat Listesi';
