@@ -9664,7 +9664,7 @@ function ymGelenFaturaPdfHTML(f) {
 
 function ymGelenEFaturaDetay(id) {
   var f = ymGelenFind(id);
-  if (!f) return '<div class="card"><div class="card-b">Fatura bulunamadı. <button class="btn btn-ghost" onclick="state._view={};go(\'gelenEfaturalar\')">Geri</button></div></div>';
+  if (!f) return '<div class="card"><div class="card-b">Fatura bulunamadı. <button type="button" class="btn btn-ghost" onclick="state._view={};go(\'gelenEfaturalar\')">Geri</button></div></div>';
   var kalemler = f.lines || f.kalemler || [];
   if (!kalemler.length) kalemler = [{ urun: f.aciklama || 'Hizmet / Ürün', miktar: 1, fiyat: Number(f.toplam || f.tutar || 0) }];
   var urunler = dbGet('urunler') || [];
@@ -9676,53 +9676,94 @@ function ymGelenEFaturaDetay(id) {
     return '<option value="' + esc(m.ad || m.id) + '">' + esc(m.ad || m.isim || m.id) + '</option>';
   }).join('');
 
+  var ara = 0;
   var rows = kalemler.map(function(l, idx) {
     var net = (Number(l.miktar) || 0) * (Number(l.fiyat) || Number(l.birimFiyat) || 0);
+    ara += net;
     return '<tr>' +
-      '<td style="font-size:13px">' + esc(l.urun || l.ad || l.aciklama || '—') +
-      '<div style="margin-top:6px"><select class="input" style="font-size:12px" id="geMatch' + idx + '">' +
-      '<option value="none">Eşleştirmeden Kaydet</option>' +
-      '<option value="match">Mevcut Ürünle Eşleştir</option>' +
-      '<option value="new">Yeni Ürün Kartı Aç</option></select>' +
-      '<select class="input" style="font-size:12px;margin-top:4px;display:none" id="geUrun' + idx + '">' + urunOpts + '</select></div></td>' +
-      '<td style="text-align:center">' + (l.miktar || 0) + '</td>' +
-      '<td style="text-align:right">' + fmtMoney(l.fiyat || l.birimFiyat || 0) + '</td>' +
-      '<td style="text-align:right">' + fmtMoney(net) + '</td>' +
-      '<td style="text-align:right">0,00</td>' +
-      '<td style="text-align:right">' + fmtMoney(net) + '</td></tr>';
+      '<td style="padding:12px 10px;border-bottom:1px solid #eef2f7;vertical-align:top">' +
+        '<div style="font-weight:600;color:#0f172a;margin-bottom:8px">' + esc(l.urun || l.ad || l.aciklama || '—') + '</div>' +
+        '<div style="display:flex;flex-direction:column;gap:6px;max-width:260px">' +
+          '<select class="input" style="width:100%;font-size:12px;padding:6px 8px" id="geMatch' + idx + '" onchange="var u=document.getElementById(\'geUrun' + idx + '\');if(u)u.style.display=this.value===\'match\'?\'block\':\'none\'">' +
+            '<option value="none">Eşleştirmeden kaydet</option>' +
+            '<option value="match">Mevcut ürünle eşleştir</option>' +
+            '<option value="new">Yeni ürün kartı aç</option>' +
+          '</select>' +
+          '<select class="input" style="width:100%;font-size:12px;padding:6px 8px;display:none" id="geUrun' + idx + '"><option value="">Ürün seçin</option>' + urunOpts + '</select>' +
+        '</div>' +
+      '</td>' +
+      '<td style="padding:12px 10px;border-bottom:1px solid #eef2f7;text-align:center;vertical-align:top">' + (l.miktar || 0) + '</td>' +
+      '<td style="padding:12px 10px;border-bottom:1px solid #eef2f7;text-align:right;vertical-align:top">' + fmtMoney(l.fiyat || l.birimFiyat || 0) + '</td>' +
+      '<td style="padding:12px 10px;border-bottom:1px solid #eef2f7;text-align:right;vertical-align:top">' + fmtMoney(net) + '</td>' +
+      '<td style="padding:12px 10px;border-bottom:1px solid #eef2f7;text-align:right;vertical-align:top">0,00</td>' +
+      '<td style="padding:12px 10px;border-bottom:1px solid #eef2f7;text-align:right;vertical-align:top;font-weight:600">' + fmtMoney(net) + '</td>' +
+    '</tr>';
   }).join('');
 
-  return '<div style="max-width:1100px">' +
-    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">' +
-    '<button type="button" class="btn" style="background:#22c55e;color:#fff;border:0" onclick="ymGelenDetayKaydet(\'' + String(id).replace(/'/g, '') + '\')">Kaydet</button>' +
-    '<button type="button" class="btn" style="background:#38bdf8;color:#fff;border:0" onclick="ymGelenYazdir(\'' + String(id).replace(/'/g, '') + '\')">Yazdır</button>' +
-    '<button type="button" class="btn" style="background:#f59e0b;color:#fff;border:0" onclick="state._view={};go(\'gelenEfaturalar\')">Geri Dön</button>' +
+  var toplam = Number(f.toplam != null ? f.toplam : (f.tutar != null ? f.tutar : ara)) || ara;
+  var infoRow = function(lab, val) {
+    return '<div style="display:grid;grid-template-columns:120px 1fr;gap:8px;padding:10px 0;border-bottom:1px solid #f1f5f9">' +
+      '<div style="color:#64748b;font-size:12px;font-weight:600;padding-top:2px">' + lab + '</div>' +
+      '<div style="color:#0f172a;font-size:13.5px;font-weight:500;word-break:break-word">' + val + '</div></div>';
+  };
+
+  return '<div style="max-width:1100px;margin:0 auto">' +
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">' +
+      '<button type="button" class="btn" style="background:#22c55e;color:#fff;border:0;font-weight:700" onclick="ymGelenDetayKaydet(\'' + String(id).replace(/'/g, '') + '\')">Kaydet</button>' +
+      '<button type="button" class="btn" style="background:#38bdf8;color:#fff;border:0" onclick="ymGelenYazdir(\'' + String(id).replace(/'/g, '') + '\')">Yazdır</button>' +
+      '<button type="button" class="btn" style="background:#f59e0b;color:#fff;border:0" onclick="state._view={};go(\'gelenEfaturalar\')">Geri Dön</button>' +
     '</div>' +
-    '<div style="display:grid;grid-template-columns:minmax(280px,1fr) minmax(320px,1.4fr);gap:16px">' +
-    '<div class="card" style="margin:0;overflow:hidden">' +
-    '<div style="background:#2563eb;color:#fff;padding:10px 14px;font-weight:800;font-size:13px">FATURA BİLGİLERİ</div>' +
-    '<div class="card-b" style="font-size:13.5px;line-height:1.8">' +
-    '<div><b>Gönderen</b><div>' + esc(f.gonderen || f.satici || '—') + '</div></div>' +
-    '<div><b>Adresi</b><div>' + esc(f.adres || '—') + '</div></div>' +
-    '<div><b>Vergi No</b><div>' + esc(f.vkn || f.vergiNo || '—') + '</div></div>' +
-    '<div><b>Belge No</b><div>' + esc(f.belgeNo || f.faturaNo || '—') + '</div></div>' +
-    '<div><b>Tarihi</b><div>' + esc(fmtDate(f.tarih) || f.tarih || '—') + '</div></div>' +
-    '<div><label class="label">Vadesi</label><input class="input" id="geVade" value="' + esc(f.vade || '') + '" placeholder="GG.AA.YYYY"></div>' +
-    '<div><label class="label">Masraf Kalemi</label><select class="input" id="geMasraf">' + masrafOpts + '</select></div>' +
-    '<div><label class="label">Açıklama</label><textarea class="input" id="geAcik" rows="2">' + esc(f.aciklama || '') + '</textarea></div>' +
-    '</div></div>' +
-    '<div class="card" style="margin:0;overflow:hidden">' +
-    '<div style="background:#22c55e;color:#fff;padding:10px 14px;font-weight:800;font-size:13px">ÜRÜN / HİZMETLER</div>' +
-    '<div class="card-b" style="overflow:auto">' +
-    '<table style="width:100%;border-collapse:collapse;font-size:13px">' +
-    '<thead><tr style="background:#ecfdf5;text-align:left">' +
-    '<th style="padding:8px">Açıklama</th><th>Miktar</th><th>Fiyat</th><th>Tutar</th><th>İndirim</th><th>Net</th></tr></thead>' +
-    '<tbody>' + rows + '</tbody></table>' +
-    '<div style="text-align:right;margin-top:12px;font-size:13px;line-height:1.7">' +
-    '<div>Brüt Toplam: <b>' + fmtMoney(f.toplam || f.tutar || 0) + '</b></div>' +
-    '<div>TOPLAM: <b>' + fmtMoney(f.toplam || f.tutar || 0) + '</b></div>' +
-    '</div></div></div></div>' +
-    '<script>(function(){var n=' + kalemler.length + ';for(var i=0;i<n;i++){var s=document.getElementById("geMatch"+i);var u=document.getElementById("geUrun"+i);if(s)s.onchange=function(el,uu){return function(){if(uu)uu.style.display=el.value==="match"?"block":"none";};}(s,u);}})();<\/script>';
+    '<div style="display:grid;grid-template-columns:minmax(280px,0.9fr) minmax(340px,1.3fr);gap:16px;align-items:start">' +
+
+      /* SOL */
+      '<div class="card" style="margin:0;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)">' +
+        '<div style="background:#2563eb;color:#fff;padding:12px 16px;font-weight:800;font-size:13px;letter-spacing:.02em">FATURA BİLGİLERİ</div>' +
+        '<div style="padding:8px 16px 16px">' +
+          infoRow('Gönderen', esc(f.gonderen || f.satici || '—')) +
+          infoRow('Adres', esc(f.adres || '—')) +
+          infoRow('Vergi No', esc(f.vkn || f.vergiNo || '—')) +
+          infoRow('Belge No', esc(f.belgeNo || f.faturaNo || '—')) +
+          infoRow('Tarih', esc((typeof fmtDate==='function'?fmtDate(f.tarih):f.tarih) || f.tarih || '—')) +
+          '<div style="padding:12px 0;border-bottom:1px solid #f1f5f9">' +
+            '<label style="display:block;color:#64748b;font-size:12px;font-weight:600;margin-bottom:6px">Vade</label>' +
+            '<input class="input" id="geVade" value="' + esc(f.vade || '') + '" placeholder="GG.AA.YYYY" style="width:100%;max-width:200px;padding:8px 10px;box-sizing:border-box">' +
+          '</div>' +
+          '<div style="padding:12px 0;border-bottom:1px solid #f1f5f9">' +
+            '<label style="display:block;color:#64748b;font-size:12px;font-weight:600;margin-bottom:6px">Masraf Kalemi</label>' +
+            '<select class="input" id="geMasraf" style="width:100%;padding:8px 10px;box-sizing:border-box">' + masrafOpts + '</select>' +
+          '</div>' +
+          '<div style="padding:12px 0 0">' +
+            '<label style="display:block;color:#64748b;font-size:12px;font-weight:600;margin-bottom:6px">Açıklama</label>' +
+            '<textarea class="input" id="geAciklama" rows="3" placeholder="İsteğe bağlı not" style="width:100%;padding:8px 10px;box-sizing:border-box;resize:vertical">' + esc(f.aciklama || '') + '</textarea>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+
+      /* SAĞ */
+      '<div class="card" style="margin:0;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)">' +
+        '<div style="background:#16a34a;color:#fff;padding:12px 16px;font-weight:800;font-size:13px;letter-spacing:.02em">ÜRÜN / HİZMETLER</div>' +
+        '<div style="overflow-x:auto">' +
+          '<table style="width:100%;border-collapse:collapse;min-width:520px">' +
+            '<thead><tr style="background:#334155;color:#fff">' +
+              '<th style="padding:10px;text-align:left;font-size:12px">Açıklama</th>' +
+              '<th style="padding:10px;text-align:center;font-size:12px">Miktar</th>' +
+              '<th style="padding:10px;text-align:right;font-size:12px">Fiyat</th>' +
+              '<th style="padding:10px;text-align:right;font-size:12px">Tutar</th>' +
+              '<th style="padding:10px;text-align:right;font-size:12px">İndirim</th>' +
+              '<th style="padding:10px;text-align:right;font-size:12px">Net</th>' +
+            '</tr></thead>' +
+            '<tbody>' + rows + '</tbody>' +
+          '</table>' +
+        '</div>' +
+        '<div style="padding:14px 16px;border-top:1px solid #e2e8f0;text-align:right;background:#f8fafc">' +
+          '<div style="font-size:13px;color:#64748b;margin-bottom:4px">Brüt Toplam: <b style="color:#0f172a">' + fmtMoney(ara) + '</b></div>' +
+          '<div style="font-size:16px;font-weight:800;color:#0f172a">TOPLAM: ' + fmtMoney(toplam) + '</div>' +
+        '</div>' +
+      '</div>' +
+
+    '</div>' +
+    '<style>@media(max-width:800px){[style*="grid-template-columns:minmax(280px"]{grid-template-columns:1fr!important}}</style>' +
+  '</div>';
 }
 
 window.ymGelenDetayKaydet = function(id) {
