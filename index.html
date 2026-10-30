@@ -4006,6 +4006,49 @@ function fmtMoneyPlain(n) {
   n = Number(n) || 0;
   return n.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
+function amountToWords(num) {
+  num = Number(num) || 0;
+  if (num === 0) return '#sıfır TL#';
+  var ones = ['','bir','iki','üç','dört','beş','altı','yedi','sekiz','dokuz'];
+  var tens = ['','on','yirmi','otuz','kırk','elli','altmış','yetmiş','seksen','doksan'];
+  var hundreds = ['','yüz','ikiyüz','üçyüz','dörtyüz','beşyüz','altıyüz','yediyüz','sekizyüz','dokuzyüz'];
+  var scales = ['','bin','milyon','milyar','trilyon'];
+  function threeDigits(n) {
+    n = Math.floor(n);
+    if (n === 0) return '';
+    var h = Math.floor(n / 100);
+    var t = Math.floor((n % 100) / 10);
+    var o = n % 10;
+    var s = '';
+    if (h) s += (h === 1 ? 'yüz' : ones[h] + 'yüz');
+    if (t) s += tens[t];
+    if (o) s += ones[o];
+    return s;
+  }
+  var whole = Math.floor(Math.abs(num));
+  var kurus = Math.round((Math.abs(num) - whole) * 100);
+  var parts = [];
+  var scaleIdx = 0;
+  if (whole === 0) parts.push('sıfır');
+  while (whole > 0) {
+    var chunk = whole % 1000;
+    if (chunk) {
+      var chunkStr = threeDigits(chunk);
+      if (scaleIdx === 1 && chunk === 1) chunkStr = 'bin';
+      else if (scaleIdx > 0) chunkStr += scales[scaleIdx];
+      parts.unshift(chunkStr);
+    }
+    whole = Math.floor(whole / 1000);
+    scaleIdx++;
+  }
+  var result = parts.join('');
+  if (kurus > 0) {
+    result += ' TL ' + threeDigits(kurus) + ' kuruş';
+  } else {
+    result += ' TL';
+  }
+  return '#' + result + '#';
+}
 function fmtDate(d) {
   if (!d) return '—';
   try {
@@ -4727,7 +4770,6 @@ function enterApp() {
 /* ========== NAV ========== */
 var NAV = [
   { id: 'home', label: 'Ana Sayfa', icon: 'home' },
-  { id: 'yantedarikci', label: 'YanTedarikçi', icon: 'yantedarikci', badge: 'yeni' },
   { id: 'yanmali', label: 'YanMali', icon: 'briefcase', badge: 'yeni' },
   { label: 'SATIŞ VE ALIŞ', type: 'label' },
   { id: 'satislar', label: 'Satışlar', icon: 'cart' },
@@ -8188,41 +8230,106 @@ window.saveSayim = function(depoId) {
 };
 
 pages.varyantlar = function() {
-  if (state._view.form) return simpleCrudPage('varyantlar', 'Varyant', 'ad');
-  if (state._view.addVal) return varyantDegerForm(state._view.addVal);
-  var list = dbGet('varyantlar');
+  if (state._view.form) return varyantEditForm(null);
+  if (state._view.editVar) return varyantEditForm(state._view.editVar);
+  if (state._view.addVal) return varyantDegerForm(state._view.addVal, null);
+  if (state._view.editVal) return varyantDegerForm(state._view.editVal.vid, state._view.editVal.idx);
+  var list = dbGet('varyantlar') || [];
   var cards = list.map(function(v) {
-    var vals = (v.degerler || []).map(function(d){
-      return '<span style="display:inline-block;padding:6px 12px;border:1px solid #e2e8f0;border-radius:6px;margin:4px;font-size:13px;">' + esc(d) + '</span>';
+    var vals = (v.degerler || []).map(function(d, idx) {
+      return '<span style="display:inline-block;padding:6px 12px;border:1px solid #e2e8f0;border-radius:6px;margin:4px;font-size:13px;cursor:pointer;background:#fff;" onclick="event.stopPropagation();state._view={editVal:{vid:\'' + v.id + '\',idx:' + idx + '}};go(\'varyantlar\')">' + esc(d) + '</span>';
     }).join('');
-    return '<div class="panel" style="margin-bottom:14px;"><div class="panel-h blue" style="display:flex;justify-content:space-between;align-items:center;">' +
+    return '<div class="panel" style="margin-bottom:14px;">' +
+      '<div class="panel-h blue" style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;" onclick="state._view={editVar:\'' + v.id + '\'};go(\'varyantlar\')">' +
       '<span>' + esc(v.ad) + '</span>' +
-      '<button class="btn btn-amber btn-sm" onclick="state._view={addVal:\'' + v.id + '\'};go(\'varyantlar\')">Varyant Değeri Ekle +</button></div>' +
+      '<button class="btn btn-amber btn-sm" onclick="event.stopPropagation();state._view={addVal:\'' + v.id + '\'};go(\'varyantlar\')">Varyant Değeri Ekle +</button></div>' +
       '<div class="panel-b">' + (vals || '<span style="color:#94a3b8;font-size:13px;">Henüz değer yok</span>') + '</div></div>';
   }).join('');
   return '<div class="toolbar"><button class="btn btn-lime" onclick="state._view={form:true};go(\'varyantlar\')">+ Yeni Varyant Ekle</button></div>' +
     (cards || '<div class="empty">Varyant yok</div>');
 };
-function varyantDegerForm(id) {
-  var v = dbGet('varyantlar').find(function(x){ return x.id === id; });
-  if (!v) { state._view={}; return pages.varyantlar(); }
-  return '<div class="card" style="max-width:420px;margin:40px auto;"><div class="card-h" style="background:#2dd4bf;color:#fff;"><h3 style="margin:0;color:#fff;">Varyant Değeri Ekle</h3></div><div class="card-b">' +
-    '<div class="field"><label>Varyant ismi</label><input class="input" value="' + esc(v.ad) + '" disabled></div>' +
-    '<div class="field"><label>Varyant Değeri</label><input class="input" id="varDeger" placeholder="değer"></div>' +
-    '<div style="text-align:right;margin-top:12px;"><button class="btn btn-lime" onclick="saveVarDeger(\'' + id + '\')">Kaydet</button></div></div></div>';
+
+function varyantEditForm(id) {
+  var v = id ? (dbGet('varyantlar') || []).find(function(x) { return x.id === id; }) : null;
+  return '<div class="card" style="max-width:420px;margin:40px auto;box-shadow:0 8px 30px rgba(0,0,0,.12);">' +
+    '<div class="card-h" style="background:#2dd4bf;color:#fff;display:flex;justify-content:space-between;align-items:center;">' +
+    '<h3 style="margin:0;color:#fff;">Varyant Düzenle</h3><button onclick="state._view={};go(\'varyantlar\')" style="background:transparent;border:0;color:#fff;font-size:20px;cursor:pointer;">×</button></div>' +
+    '<div class="card-b">' +
+    '<div class="field"><label>Varyant İsmi</label><input class="input" id="varAd" value="' + esc(v ? v.ad : '') + '" placeholder=\'Örneğin: "Renk", "Ebat", "Beden" vs...\'></div>' +
+    '<div style="display:flex;justify-content:space-between;margin-top:16px;border-top:1px solid #e2e8f0;padding-top:12px;">' +
+    (v ? '<button class="btn" style="background:#ef4444;color:#fff;border:0;" onclick="varyantSil(\'' + id + '\')">🗑 Sil</button>' : '<span></span>') +
+    '<button class="btn btn-lime" onclick="saveVaryant(\'' + (id || '') + '\')">✓ Kaydet</button></div></div></div>';
 }
-window.saveVarDeger = function(id) {
-  var val = (document.getElementById('varDeger').value || '').trim();
-  if (!val) return toast('Değer girin');
-  var list = dbGet('varyantlar');
-  var v = list.find(function(x){ return x.id === id; });
-  if (!v) return;
-  v.degerler = v.degerler || [];
-  v.degerler.push(val);
+
+window.saveVaryant = function(id) {
+  var ad = (document.getElementById('varAd').value || '').trim();
+  if (!ad) return toast('Varyant ismi girin');
+  var list = dbGet('varyantlar') || [];
+  if (id) {
+    var v = list.find(function(x) { return x.id === id; });
+    if (v) v.ad = ad;
+  } else {
+    list.push({ id: uid('var'), ad: ad, degerler: [] });
+  }
   dbSet('varyantlar', list);
   state._view = {};
   go('varyantlar');
-  toast('Değer eklendi');
+  toast(id ? 'Varyant güncellendi' : 'Varyant eklendi');
+};
+
+window.varyantSil = function(id) {
+  ymConfirm('Bu varyant ve tüm değerleri silinecek. Emin misiniz?', { title: 'Varyant Sil', okText: 'Evet', cancelText: 'Hayır', danger: true }).then(function(ok) {
+    if (!ok) return;
+    dbSet('varyantlar', (dbGet('varyantlar') || []).filter(function(x) { return x.id !== id; }));
+    state._view = {};
+    go('varyantlar');
+    toast('Varyant silindi');
+  });
+};
+
+function varyantDegerForm(vid, idx) {
+  var v = (dbGet('varyantlar') || []).find(function(x) { return x.id === vid; });
+  if (!v) { state._view = {}; return pages.varyantlar(); }
+  var isEdit = idx != null && idx >= 0;
+  var curVal = isEdit ? (v.degerler[idx] || '') : '';
+  return '<div class="card" style="max-width:420px;margin:40px auto;box-shadow:0 8px 30px rgba(0,0,0,.12);">' +
+    '<div class="card-h" style="background:#2dd4bf;color:#fff;display:flex;justify-content:space-between;align-items:center;">' +
+    '<h3 style="margin:0;color:#fff;">Varyant Değeri Düzenle</h3><button onclick="state._view={};go(\'varyantlar\')" style="background:transparent;border:0;color:#fff;font-size:20px;cursor:pointer;">×</button></div>' +
+    '<div class="card-b">' +
+    '<div class="field"><label>Varyant İsmi</label><input class="input" value="' + esc(v.ad) + '" disabled style="background:#f1f5f9;"></div>' +
+    '<div class="field"><label>Varyant Değeri</label><input class="input" id="varDeger" value="' + esc(curVal) + '" placeholder="değer"></div>' +
+    '<div style="display:flex;justify-content:space-between;margin-top:16px;border-top:1px solid #e2e8f0;padding-top:12px;">' +
+    (isEdit ? '<button class="btn" style="background:#ef4444;color:#fff;border:0;" onclick="varyantDegerSil(\'' + vid + '\',' + idx + ')">🗑 Sil</button>' : '<span></span>') +
+    '<button class="btn btn-lime" onclick="saveVarDeger(\'' + vid + '\',' + (isEdit ? idx : -1) + ')">✓ Kaydet</button></div></div></div>';
+}
+
+window.saveVarDeger = function(vid, idx) {
+  var val = (document.getElementById('varDeger').value || '').trim();
+  if (!val) return toast('Değer girin');
+  var list = dbGet('varyantlar') || [];
+  var v = list.find(function(x) { return x.id === vid; });
+  if (!v) return;
+  v.degerler = v.degerler || [];
+  if (idx >= 0) v.degerler[idx] = val;
+  else v.degerler.push(val);
+  dbSet('varyantlar', list);
+  state._view = {};
+  go('varyantlar');
+  toast(idx >= 0 ? 'Değer güncellendi' : 'Değer eklendi');
+};
+
+window.varyantDegerSil = function(vid, idx) {
+  ymConfirm('Bu varyant değeri silinecek. Emin misiniz?', { title: 'Değer Sil', okText: 'Evet', cancelText: 'Hayır', danger: true }).then(function(ok) {
+    if (!ok) return;
+    var list = dbGet('varyantlar') || [];
+    var v = list.find(function(x) { return x.id === vid; });
+    if (!v || !v.degerler) return;
+    v.degerler.splice(idx, 1);
+    dbSet('varyantlar', list);
+    state._view = {};
+    go('varyantlar');
+    toast('Değer silindi');
+  });
 };
 
 
@@ -8773,7 +8880,7 @@ function satisForm() {
     leftBody =
       '<div class="field"><label>Belge No</label><div class="uf-row">'+
         '<input id="sat_belge" class="input" value="'+esc(belgeNo)+'" onchange="state._view.belgeNo=this.value" style="max-width:140px">'+
-        '<button type="button" class="btn btn-ghost btn-sm" onclick="satisSiraNo()">Sıradaki No</button>'+
+        '<button type="button" class="btn btn-sm" style="background:#0ea5e9;color:#fff;font-weight:700;border:none" onclick="satisSiraNo()">Sıradaki No</button>'+
       '</div></div>'+
       '<div class="field"><label>Tarihi</label><div class="uf-row">'+
         '<input id="sat_tarih" class="input" type="date" value="'+esc(tarih)+'" onchange="state._view.tarih=this.value">'+
@@ -9248,7 +9355,8 @@ function tahsilModal() {
     '<div class="modal-b">' +
     '<p style="margin-bottom:12px;font-size:13px;color:var(--muted);">' + esc(s.musteri) + ' — Kalan: <strong>' + fmtMoney(kalan) + '</strong></p>' +
     '<div class="field"><label>Hesap / Kasa</label><select id="th_hesap"><option value="kasa">Kasa</option></select></div>' +
-    '<div class="field"><label>Tutar</label><input id="th_tutar" type="number" step="0.01" value="' + kalan + '"></div>' +
+    '<div class="field"><label>Tutar</label><input id="th_tutar" type="number" step="0.01" value="' + kalan + '" oninput="var el=document.getElementById(\'th_yazi\');if(el)el.textContent=typeof amountToWords===\'function\'?amountToWords(this.value):\'\'"></div>' +
+    '<div class="field"><label>Yazıyla</label><div id="th_yazi" style="font-size:13px;color:#0f766e;font-weight:600;padding:6px 0">' + (typeof amountToWords==='function'?amountToWords(kalan):'') + '</div></div>' +
     '</div><div class="modal-f"><button class="btn btn-ghost" onclick="state._view={};go(\'satislar\')">Vazgeç</button>' +
     '<button class="btn btn-lime" onclick="tahsilKaydet()">Kaydet</button></div></div></div>';
 }
@@ -9365,7 +9473,7 @@ function alisForm() {
     '<button type="button" data-tip="'+esc(ALIS_TIP.fatura)+'" onclick="alisKaydetTip(\'fatura\')">Fatura Kaydet</button>'+
     '<button type="button" onclick="state._view={};go(\'alislar\')">Geri Dön</button></div>'+
   '<div class="sale-layout"><div class="card panel-blue"><div class="card-h"><h3>'+esc(c.unvan||'Tedarikçi')+'</h3></div><div class="card-b">'+
-    '<div class="field"><label>Belge No</label><div class="uf-row"><input id="al_no" class="input" value="'+esc(h.no||'')+'" '+hv('no')+'><button type="button" class="btn btn-ghost btn-sm" onclick="alisSiraNo()">Sıradaki No</button></div></div>'+
+    '<div class="field"><label>Belge No</label><div class="uf-row"><input id="al_no" class="input" value="'+esc(h.no||'')+'" '+hv('no')+'><button type="button" class="btn btn-sm" style="background:#0ea5e9;color:#fff;font-weight:700;border:none" onclick="alisSiraNo()">Sıradaki No</button></div></div>'+
     '<div class="field"><label>Tarihi</label><input id="al_tarih" class="input" type="date" value="'+esc(h.tarih||todayISO())+'" '+hv('tarih')+' style="max-width:180px"></div>'+
     '<div class="field"><label>Vadesi</label><input id="al_vade" class="input" type="date" value="'+esc(h.vade||todayISO())+'" '+hv('vade')+' style="max-width:180px"></div>'+
     '<div class="field"><label>Masraf Kalemi<br><small>(isteğe bağlı)</small></label><input id="al_masraf" class="input" value="'+esc(h.masraf||'')+'" '+hv('masraf')+'></div>'+
@@ -11717,9 +11825,22 @@ function calisanDetail(id) {
     '<button type="button" onclick="calisanIslem(\'' + id + '\',\'odeme\')">Ödeme Yap (Maaş/Prim/Avans)</button>' +
     '<button type="button" onclick="calisanIslem(\'' + id + '\',\'avansiade\')">Avans İadesi Al</button></div></div> ' +
     '<button class="btn btn-amber btn-sm" onclick="go(\'masraflar\')">Masraf Kaydet</button> ' +
-    '<button class="btn btn-rose btn-sm" onclick="istenCikar(\'' + id + '\')">İşten Çıkar</button> ' +
+    (c.istenCikis
+      ? '<button class="btn btn-lime btn-sm" onclick="iseIade(\'' + id + '\')">İşe İade Et</button> '
+      : '<button class="btn btn-rose btn-sm" onclick="istenCikar(\'' + id + '\')">İşten Çıkar</button> ') +
     '<button class="btn btn-ghost btn-sm" onclick="silCalisan(\'' + id + '\')">Çalışanı Sil</button></div>';
 }
+window.iseIade = function(id) {
+  return ymConfirm('Çalışan işe iade edilsin mi?',{title:'İşe İade',okText:'İade Et',cancelText:'Vazgeç'}).then(function(ok){if(!ok)return;
+  var list = dbGet('calisanlar')||[];
+  list.forEach(function(c){ if (c.id===id) { delete c.istenCikis; c.iseIadeTarih = todayISO(); } });
+  dbSet('calisanlar', list);
+  try { if (typeof pushAct==='function') pushAct('Çalışan işe iade edildi'); } catch(e){}
+  state._view = { detail: id };
+  go('calisanlar');
+  toast('İşe iade edildi');
+});
+};
 window.istenCikar = function(id) {
   return ymConfirm('İşten çıkarılsın mı?',{title:'İşten Çıkar',okText:'Çıkar',cancelText:'İptal',danger:true}).then(function(ok){if(!ok)return;
   var list = dbGet('calisanlar')||[];
@@ -11793,50 +11914,147 @@ pages.islemler = function() {
 };
 
 pages.kredi = function() {
-  if (state._view.form) return krediForm();
-  var list = dbGet('krediler')||[];
-  if (!list.length) {
-    return '<div class="toolbar"><button class="btn btn-lime" onclick="state._view={form:true};go(\'kredi\')">+ Yeni Kredi Ekle</button></div>' +
-      '<div class="trial-banner"><div><strong>Hiç kredi kaydınız bulunmuyor.</strong><br>Banka kredilerinizi, vergi borcu yapılandırmalarınızı ve ödeme planını girin.<br>Yukarıdaki <strong>+ Yeni Kredi Ekle</strong> düğmesini kullanarak kredilerinizi kaydedebilirsiniz.</div></div>';
-  }
-  var rows = list.map(function(k){
-    return [esc(k.ad), fmtMoney(k.kalan), k.taksitSayisi||'—', fmtDate(k.ilkTaksit), esc(k.takvim||'Her Ay'),
-      '<button class="btn btn-ghost btn-sm" onclick="ymConfirm(\'Silinsin mi?\',{title:\'Sil\',okText:\'Sil\',cancelText:\'İptal\',danger:true}).then(function(ok){if(!ok)return;dbSet(\'krediler\',(dbGet(\'krediler\')||[]).filter(function(x){return x.id!==\'' + k.id + '\';}));go(\'kredi\');})}">Sil</button>'];
+  var view = state._view || {};
+  if (view.form) return krediForm(view.editId || null);
+  if (view.detail) return krediDetail(view.detail);
+  if (view.docs) return krediDocs(view.docs);
+  if (view.addTaksit) return krediAddTaksit(view.addTaksit);
+  var list = dbGet('krediler') || [];
+  var showBitmis = !!view.showBitmis;
+  var filtered = list.filter(function(k) {
+    if (showBitmis) return true;
+    return (Number(k.kalan) || 0) > 0.01;
   });
-  return '<div class="toolbar"><button class="btn btn-lime" onclick="state._view={form:true};go(\'kredi\')">+ Yeni Kredi Ekle</button></div>' +
-    tableHTML(['Kredi Adı','Kalan Borç','Kalan Taksit','İlk Taksit','Takvim',' '], rows);
+  var toplamKalan = list.reduce(function(s, k) { return s + (Number(k.kalan) || 0); }, 0);
+  var buAy = 0;
+  var now = new Date();
+  list.forEach(function(k) {
+    (k.taksitler || []).forEach(function(t) {
+      if (!t.odenen || Number(t.odenen) < Number(t.tutar)) {
+        try {
+          var d = new Date(t.tarih);
+          if (d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()) {
+            buAy += (Number(t.tutar) || 0) - (Number(t.odenen) || 0);
+          }
+        } catch (e) {}
+      }
+    });
+  });
+  var cards = filtered.map(function(k) {
+    var durum = '';
+    var kalan = Number(k.kalan) || 0;
+    if (kalan <= 0.01) durum = '<span style="background:#22c55e;color:#fff;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;">Bitti</span>';
+    else {
+      var gecikme = false;
+      (k.taksitler || []).forEach(function(t) {
+        if ((Number(t.odenen) || 0) < (Number(t.tutar) || 0)) {
+          try {
+            if (new Date(t.tarih) < new Date(now.toDateString())) gecikme = true;
+          } catch (e) {}
+        }
+      });
+      if (gecikme) durum = '<span style="background:#ef4444;color:#fff;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;">Gecikmede</span>';
+    }
+    return '<div class="panel" style="margin-bottom:12px;cursor:pointer;" onclick="state._view={detail:\'' + k.id + '\'};go(\'kredi\')">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:#0ea5e9;color:#fff;border-radius:8px 8px 0 0;">' +
+      '<span style="font-weight:700;font-size:15px;">' + esc(k.ad) + '</span>' +
+      '<div style="display:flex;align-items:center;gap:10px;">' + durum +
+      '<span style="background:#fff;color:#0f172a;padding:4px 12px;border-radius:4px;font-weight:700;">TL ' + fmtMoneyPlain(kalan) + '</span></div></div></div>';
+  }).join('');
+  return '<div class="toolbar" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">' +
+    '<button class="btn btn-lime" onclick="state._view={form:true};go(\'kredi\')">+ Yeni Kredi Ekle</button>' +
+    '<div style="display:flex;gap:12px;align-items:center;">' +
+    '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:8px 14px;text-align:center;"><div style="font-size:11px;color:#64748b;">KALAN ÖDEMELER</div><div style="font-weight:700;color:#0ea5e9;">₺ ' + fmtMoneyPlain(toplamKalan) + '</div></div>' +
+    '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:8px 14px;text-align:center;"><div style="font-size:11px;color:#64748b;">BU AYKı ÖDEMELER</div><div style="font-weight:700;color:#ef4444;">₺ ' + fmtMoneyPlain(buAy) + '</div></div>' +
+    '<label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;"><input type="checkbox" ' + (showBitmis ? 'checked' : '') + ' onchange="state._view={showBitmis:this.checked};go(\'kredi\')"> Borcu bitenleri de göster</label></div></div>' +
+    (cards || '<div class="trial-banner"><div><strong>Hiç kredi kaydınız bulunmuyor.</strong><br>Banka kredilerinizi, vergi borcu yapılandırmalarınızı ve ödeme planını girin.<br>Yukarıdaki <strong>+ Yeni Kredi Ekle</strong> düğmesini kullanarak kredilerinizi kaydedebilirsiniz.</div></div>');
 };
-function krediForm() {
-  var hesaplar = dbGet('hesaplar');
-  var hopts = hesaplar.map(function(h){ return '<option value="' + h.id + '">' + esc(h.ad) + '</option>'; }).join('');
-  return '<div class="card" style="max-width:480px;margin:30px auto;"><div class="card-h" style="background:#2dd4bf;color:#fff;"><h3 style="margin:0;color:#fff;">Kredi Tanımı</h3></div><div class="card-b">' +
-    '<div class="field"><label>Kredi Adı</label><input class="input" id="kr_ad"></div>' +
-    '<div class="field"><label>Kalan Borç Tutarı</label><input class="input" id="kr_borc" type="number" step="0.01"></div>' +
-    '<div class="field"><label>Kalan Taksit Sayısı</label><input class="input" id="kr_taksit" type="number" max="144"><small style="color:#ef4444;">Maksimum 144 taksit</small></div>' +
-    '<div class="field"><label>Sıradaki İlk Taksit Tarihi</label><input class="input" id="kr_ilk" type="date"></div>' +
-    '<div class="field"><label>Ödeme Takvimi</label><select class="input" id="kr_takvim"><option>Her Ay</option><option>Her Hafta</option><option>Her 3 Ay</option></select></div>' +
-    '<div class="field"><label>Ödediğiniz Hesap</label><select class="input" id="kr_hesap"><option value="">Hesap seçin</option>' + hopts + '</select></div>' +
-    '<div class="field"><label>Notlar</label><textarea class="input" id="kr_not" rows="2"></textarea></div>' +
-    '<div style="text-align:right;margin-top:12px;"><button class="btn btn-ghost" onclick="state._view={};go(\'kredi\')">Vazgeç</button> ' +
-    '<button class="btn btn-lime" onclick="saveKredi()">Kaydet</button></div></div></div>';
+
+function krediGenerateTaksitler(kalan, sayi, ilkTarih, takvim) {
+  var arr = [];
+  var tutar = Math.round((Number(kalan) / Number(sayi)) * 100) / 100;
+  var d = new Date(ilkTarih + 'T12:00:00');
+  for (var i = 0; i < sayi; i++) {
+    var td = new Date(d);
+    if (takvim === 'Her Hafta') td.setDate(d.getDate() + (i * 7));
+    else if (takvim === 'Her 3 Ay') td.setMonth(d.getMonth() + (i * 3));
+    else td.setMonth(d.getMonth() + i);
+    arr.push({
+      id: uid('tk'),
+      no: i + 1,
+      tarih: td.toISOString().slice(0, 10),
+      tutar: (i === sayi - 1) ? Math.round((kalan - tutar * (sayi - 1)) * 100) / 100 : tutar,
+      odenen: 0
+    });
+  }
+  return arr;
 }
-window.saveKredi = function() {
-  var ad = (document.getElementById('kr_ad').value||'').trim();
+
+function krediForm(editId) {
+  var k = null;
+  if (editId) k = (dbGet('krediler') || []).find(function(x) { return x.id === editId; });
+  var hesaplar = dbGet('hesaplar') || [];
+  var hopts = hesaplar.map(function(h) {
+    return '<option value="' + h.id + '"' + (k && k.hesapId === h.id ? ' selected' : '') + '>' + esc(h.ad) + (h.bakiye != null ? ' (' + fmtMoneyPlain(h.bakiye) + ' TL)' : '') + '</option>';
+  }).join('');
+  var title = k ? 'Kredi Tanımı' : 'Kredi Tanımı';
+  return '<div class="card" style="max-width:480px;margin:30px auto;box-shadow:0 8px 30px rgba(0,0,0,.12);">' +
+    '<div class="card-h" style="background:#2dd4bf;color:#fff;display:flex;justify-content:space-between;align-items:center;"><h3 style="margin:0;color:#fff;">' + title + '</h3><button onclick="state._view={};go(\'kredi\')" style="background:transparent;border:0;color:#fff;font-size:20px;cursor:pointer;">×</button></div>' +
+    '<div class="card-b">' +
+    '<div class="field"><label>Kredi Adı</label><input class="input" id="kr_ad" value="' + esc(k ? k.ad : '') + '"></div>' +
+    '<div class="field"><label>' + (k ? 'Kredi Tutarı' : 'Kalan Borç Tutarı') + '</label><input class="input" id="kr_borc" type="number" step="0.01" value="' + (k ? (k.tutar || k.kalan) : '') + '"></div>' +
+    (k ? '' : '<div class="field"><label>Kalan Taksit Sayısı</label><input class="input" id="kr_taksit" type="number" max="144" value=""><small style="color:#ef4444;">Maksimum 144 taksit girebilirsiniz</small></div>' +
+    '<div class="field"><label>Sıradaki İlk Taksit Tarihi</label><input class="input" id="kr_ilk" type="date" value="' + (k ? (k.ilkTaksit || '') : '') + '"></div>' +
+    '<div class="field"><label>Ödeme Takvimi</label><select class="input" id="kr_takvim"><option>Her Ay</option><option>Her Hafta</option><option>Her 3 Ay</option></select></div>') +
+    '<div class="field"><label>' + (k ? 'Ödeme Yaptığınız Hesap' : 'Ödediğiniz Hesap') + '</label><select class="input" id="kr_hesap"><option value="">Hesap seçin</option>' + hopts + '</select>' +
+    (k ? '<small style="color:#64748b;">(banka hesaplarınız)</small>' : '') + '</div>' +
+    '<div class="field"><label>Notlar</label><textarea class="input" id="kr_not" rows="2">' + esc(k ? (k.not || '') : '') + '</textarea></div>' +
+    '<div style="text-align:right;margin-top:16px;border-top:1px solid #e2e8f0;padding-top:12px;">' +
+    '<button class="btn" style="background:#f59e0b;color:#fff;border:0;" onclick="state._view={};go(\'kredi\')">✕ Vazgeç</button> ' +
+    '<button class="btn btn-lime" onclick="saveKredi(\'' + (editId || '') + '\')">✓ Kaydet</button></div></div></div>';
+}
+
+window.saveKredi = function(editId) {
+  var ad = (document.getElementById('kr_ad').value || '').trim();
   if (!ad) return toast('Kredi adı girin');
-  var hesapId = (document.getElementById('kr_hesap')||{}).value || '';
+  var hesapId = (document.getElementById('kr_hesap') || {}).value || '';
   if (!hesapId) return ymAlert('Bir Hesap Seçilmemiş!', 'Hata');
-  var list = dbGet('krediler')||[];
+  var list = dbGet('krediler') || [];
+  if (editId) {
+    var k = list.find(function(x) { return x.id === editId; });
+    if (!k) return;
+    k.ad = ad;
+    k.tutar = Number(document.getElementById('kr_borc').value) || 0;
+    k.hesapId = hesapId;
+    k.not = (document.getElementById('kr_not') || {}).value || '';
+    dbSet('krediler', list);
+    pushAct('Kredi güncellendi: ' + ad);
+    state._view = { detail: editId };
+    go('kredi');
+    toast('Kredi güncellendi');
+    return;
+  }
+  var borc = Number(document.getElementById('kr_borc').value) || 0;
+  var sayi = Number(document.getElementById('kr_taksit').value) || 0;
+  if (sayi < 1 || sayi > 144) return toast('Taksit sayısı 1-144 arası olmalı');
+  var ilk = document.getElementById('kr_ilk').value;
+  if (!ilk) return toast('İlk taksit tarihi girin');
+  var takvim = document.getElementById('kr_takvim').value || 'Her Ay';
+  var taksitler = krediGenerateTaksitler(borc, sayi, ilk, takvim);
   list.push({
-    id: uid('kr'), ad: ad,
-    kalan: Number(document.getElementById('kr_borc').value)||0,
-    tutar: Number(document.getElementById('kr_borc').value)||0,
-    taksitSayisi: Number(document.getElementById('kr_taksit').value)||0,
-    ilkTaksit: document.getElementById('kr_ilk').value,
-    vade: document.getElementById('kr_ilk').value,
-    takvim: document.getElementById('kr_takvim').value,
-    hesapId: document.getElementById('kr_hesap').value,
-    not: document.getElementById('kr_not').value,
+    id: uid('kr'),
+    ad: ad,
+    kalan: borc,
+    tutar: borc,
+    taksitSayisi: sayi,
+    ilkTaksit: ilk,
+    vade: ilk,
+    takvim: takvim,
+    hesapId: hesapId,
+    not: (document.getElementById('kr_not') || {}).value || '',
     odendi: false,
+    taksitler: taksitler,
+    belgeler: [],
     created: new Date().toISOString()
   });
   dbSet('krediler', list);
@@ -11844,6 +12062,279 @@ window.saveKredi = function() {
   state._view = {};
   go('kredi');
   toast('Kredi kaydedildi');
+};
+
+function krediDetail(id) {
+  var k = (dbGet('krediler') || []).find(function(x) { return x.id === id; });
+  if (!k) { state._view = {}; return pages.kredi(); }
+  var hesaplar = dbGet('hesaplar') || [];
+  var hesap = hesaplar.find(function(h) { return h.id === k.hesapId; });
+  var taksitler = k.taksitler || [];
+  var rows = taksitler.map(function(t, i) {
+    var odenen = Number(t.odenen) || 0;
+    var btn = odenen >= Number(t.tutar)
+      ? '<button class="btn btn-sm" style="background:#94a3b8;color:#fff;border:0;cursor:default;">ödendi</button>'
+      : '<button class="btn btn-sm" style="background:#22c55e;color:#fff;border:0;" onclick="krediOdemeYap(\'' + id + '\',\'' + t.id + '\')">ödeme yap</button>';
+    return '<tr><td style="padding:10px 12px;">' + (t.no || (i + 1)) + '</td>' +
+      '<td style="padding:10px 12px;color:#0ea5e9;">' + fmtDateLong(t.tarih) + '</td>' +
+      '<td style="padding:10px 12px;text-align:right;">' + fmtMoneyPlain(t.tutar) + '</td>' +
+      '<td style="padding:10px 12px;text-align:right;">' + fmtMoneyPlain(odenen) + '</td>' +
+      '<td style="padding:10px 12px;">' + btn + '</td></tr>';
+  }).join('');
+  return '<div class="card" style="margin-bottom:16px;">' +
+    '<div class="card-h" style="background:#2563eb;color:#fff;"><h3 style="margin:0;color:#fff;">' + esc(k.ad) + '</h3></div>' +
+    '<div class="card-b" style="display:grid;grid-template-columns:140px 1fr;gap:8px 16px;font-size:14px;">' +
+    '<div style="color:#64748b;">Ödeme Hesabı</div><div>' + esc(hesap ? hesap.ad : '—') + '</div>' +
+    '<div style="color:#64748b;">Toplam Kredi Tutarı</div><div>' + fmtMoneyPlain(k.tutar) + '</div>' +
+    '<div style="color:#64748b;">Kalan Tutar</div><div>' + fmtMoneyPlain(k.kalan) + '</div>' +
+    '<div style="color:#64748b;">Notlar</div><div>' + esc(k.not || '') + '</div></div>' +
+    '<div style="padding:12px 16px;display:flex;flex-wrap:wrap;gap:8px;border-top:1px solid #e2e8f0;">' +
+    '<button class="btn" style="background:#38bdf8;color:#fff;border:0;" onclick="state._view={form:true,editId:\'' + id + '\'};go(\'kredi\')">✎ Güncelle</button>' +
+    '<button class="btn" style="background:#22c55e;color:#fff;border:0;" onclick="state._view={addTaksit:\'' + id + '\'};go(\'kredi\')">📅 Taksit Tarihi Ekle</button>' +
+    '<button class="btn" style="background:#ef4444;color:#fff;border:0;" onclick="krediSilOnay(\'' + id + '\')">✕ Krediyi Sil</button>' +
+    '<button class="btn" style="background:#7c3aed;color:#fff;border:0;" onclick="state._view={docs:\'' + id + '\'};go(\'kredi\')">📄 Dökümanlar</button></div></div>' +
+    '<div class="card">' +
+    '<div class="card-h" style="background:#1e293b;color:#fff;display:flex;justify-content:space-between;align-items:center;">' +
+    '<h3 style="margin:0;color:#fff;font-size:14px;">ÖDEME TARİHLERİ</h3>' +
+    '<div style="display:flex;gap:6px;">' +
+    '<button class="btn btn-sm" style="background:#22c55e;color:#fff;border:0;" onclick="krediExcel(\'' + id + '\')">📊 Excel</button>' +
+    '<button class="btn btn-sm" style="background:#f59e0b;color:#fff;border:0;" onclick="krediPdf(\'' + id + '\')">📄 PDF</button></div></div>' +
+    '<div class="card-b" style="padding:0;overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:13px;">' +
+    '<thead><tr style="background:#f8fafc;"><th style="padding:10px 12px;text-align:left;">#</th><th style="padding:10px 12px;text-align:left;">Tarih</th><th style="padding:10px 12px;text-align:right;">Tutar</th><th style="padding:10px 12px;text-align:right;">Ödenen</th><th style="padding:10px 12px;"></th></tr></thead>' +
+    '<tbody>' + (rows || '<tr><td colspan="5" style="padding:20px;text-align:center;color:#94a3b8;">Taksit yok</td></tr>') + '</tbody></table></div></div>' +
+    '<div style="margin-top:12px;"><button class="btn btn-ghost" onclick="state._view={};go(\'kredi\')">← Geri</button></div>';
+}
+
+function fmtDateLong(d) {
+  if (!d) return '—';
+  try {
+    var x = new Date(d + 'T12:00:00');
+    var months = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+    return x.getDate() + ' ' + months[x.getMonth()] + ' ' + x.getFullYear();
+  } catch (e) { return String(d); }
+}
+
+window.krediOdemeYap = function(krediId, taksitId) {
+  var list = dbGet('krediler') || [];
+  var k = list.find(function(x) { return x.id === krediId; });
+  if (!k) return;
+  var t = (k.taksitler || []).find(function(x) { return x.id === taksitId; });
+  if (!t) return;
+  var kalanTaksit = (Number(t.tutar) || 0) - (Number(t.odenen) || 0);
+  if (kalanTaksit <= 0) return toast('Bu taksit zaten ödendi');
+  t.odenen = Number(t.tutar) || 0;
+  k.kalan = Math.max(0, (Number(k.kalan) || 0) - kalanTaksit);
+  if (k.kalan < 0.01) k.odendi = true;
+  dbSet('krediler', list);
+  // hesap hareketi ekle
+  try {
+    var hareketler = dbGet('hesapHareketleri') || dbGet('hesapHareket') || [];
+    hareketler.push({
+      id: uid('hh'),
+      hesapId: k.hesapId,
+      tip: 'cikis',
+      tutar: kalanTaksit,
+      aciklama: 'Kredi ödemesi: ' + k.ad + ' (Taksit #' + t.no + ')',
+      tarih: todayISO(),
+      user: (state.user && state.user.name) || 'Sistem',
+      created: new Date().toISOString()
+    });
+    dbSet('hesapHareketleri', hareketler);
+  } catch (e) {}
+  pushAct('Kredi ödemesi: ' + k.ad + ' - ' + fmtMoneyPlain(kalanTaksit) + ' TL');
+  state._view = { detail: krediId };
+  go('kredi');
+  toast('Ödeme kaydedildi');
+};
+
+window.krediSilOnay = function(id) {
+  ymConfirm('Dikkat! Kredi tanımı silinecek.<br>Bu kredi için daha önceden ödeme yaptıysanız, ilgili hesap hareketleri silinmeyecektir.<br>Bu işlemin geri dönüşü yoktur.<br><br>Silme işlemini onaylıyor musunuz?', {
+    title: 'Silme Onayı',
+    okText: '✓ Evet',
+    cancelText: '✕ Hayır',
+    danger: true
+  }).then(function(ok) {
+    if (!ok) return;
+    var list = (dbGet('krediler') || []).filter(function(x) { return x.id !== id; });
+    dbSet('krediler', list);
+    pushAct('Kredi silindi');
+    state._view = {};
+    go('kredi');
+    toast('Kredi silindi');
+  });
+};
+
+function krediAddTaksit(id) {
+  return '<div class="card" style="max-width:400px;margin:40px auto;box-shadow:0 8px 30px rgba(0,0,0,.12);">' +
+    '<div class="card-h" style="background:#2dd4bf;color:#fff;display:flex;justify-content:space-between;align-items:center;"><h3 style="margin:0;color:#fff;">Taksit Tanımı</h3><button onclick="state._view={detail:\'' + id + '\'};go(\'kredi\')" style="background:transparent;border:0;color:#fff;font-size:20px;cursor:pointer;">×</button></div>' +
+    '<div class="card-b">' +
+    '<div class="field"><label>Tarih</label><input class="input" id="tk_tarih" type="date" value="' + todayISO() + '"></div>' +
+    '<div class="field"><label>Tutar</label><input class="input" id="tk_tutar" type="number" step="0.01"></div>' +
+    '<div style="text-align:right;margin-top:16px;"><button class="btn btn-lime" onclick="saveKrediTaksit(\'' + id + '\')">Kaydet</button></div></div></div>';
+}
+
+window.saveKrediTaksit = function(id) {
+  var tarih = (document.getElementById('tk_tarih') || {}).value;
+  var tutar = Number((document.getElementById('tk_tutar') || {}).value) || 0;
+  if (!tarih || tutar <= 0) return toast('Tarih ve tutar girin');
+  var list = dbGet('krediler') || [];
+  var k = list.find(function(x) { return x.id === id; });
+  if (!k) return;
+  k.taksitler = k.taksitler || [];
+  k.taksitler.push({
+    id: uid('tk'),
+    no: k.taksitler.length + 1,
+    tarih: tarih,
+    tutar: tutar,
+    odenen: 0
+  });
+  k.kalan = (Number(k.kalan) || 0) + tutar;
+  k.tutar = (Number(k.tutar) || 0) + tutar;
+  dbSet('krediler', list);
+  state._view = { detail: id };
+  go('kredi');
+  toast('Taksit eklendi');
+};
+
+function krediDocs(id) {
+  var k = (dbGet('krediler') || []).find(function(x) { return x.id === id; });
+  if (!k) { state._view = {}; return pages.kredi(); }
+  var belgeler = k.belgeler || [];
+  var listHtml = belgeler.map(function(b, i) {
+    return '<div style="display:flex;align-items:center;justify-content:space-between;background:#0ea5e9;color:#fff;border-radius:8px;padding:12px 16px;margin-bottom:10px;">' +
+      '<div><div style="font-weight:600;">' + esc(b.name || 'belge') + '</div><div style="font-size:12px;opacity:.9;">' + esc(b.aciklama || '') + '</div></div>' +
+      '<div style="display:flex;gap:6px;align-items:center;">' +
+      '<span style="font-size:12px;opacity:.8;">' + fmtDate(b.tarih) + '</span>' +
+      '<button class="btn btn-sm" style="background:#22c55e;color:#fff;border:0;" onclick="krediBelgeIndir(\'' + id + '\',' + i + ')">↓ İndir</button>' +
+      '<button class="btn btn-sm" style="background:#f59e0b;color:#fff;border:0;" onclick="krediBelgeGuncelle(\'' + id + '\',' + i + ')">✎ Güncelle</button>' +
+      '<button class="btn btn-sm" style="background:#ef4444;color:#fff;border:0;" onclick="krediBelgeSil(\'' + id + '\',' + i + ')">✕ Sil</button></div></div>';
+  }).join('');
+  return '<div class="toolbar"><button class="btn btn-lime" onclick="krediBelgeYukleModal(\'' + id + '\')">+ Yeni Belge Yükle</button> ' +
+    '<button class="btn" style="background:#f59e0b;color:#fff;border:0;" onclick="state._view={detail:\'' + id + '\'};go(\'kredi\')">← Geri Dön</button></div>' +
+    '<div style="background:#e8d5b7;border-radius:8px;padding:20px;margin:16px 0;text-align:center;font-weight:700;font-size:18px;color:#5c4a32;">' + esc(k.ad) + '</div>' +
+    (listHtml || '<div class="card" style="background:#fef9c3;border:1px solid #fde68a;"><div class="card-b" style="color:#854d0e;font-size:13px;">' +
+    'Kullandığınız kredi ile ilgili belgeleri (sözleşme, taahhütname, sigorta...) taratıp veya resmini çekip buraya yükleyebilirsiniz.<br>Dilediğiniz zaman da buradan tekrar indirebilirsiniz.<br><br>' +
+    'Belge yüklemek için yukarıdaki <strong>+ Yeni Belge Yükle</strong> düğmesini kullanın.</div></div>');
+}
+
+window.krediBelgeYukleModal = function(id) {
+  var html = '<div class="field"><label>Yüklenecek Dosya</label><input type="file" id="kr_belge_file" class="input" accept=".doc,.docx,.xls,.xlsx,.pdf,.jpg,.jpeg,.gif,.png,.txt"></div>' +
+    '<div class="field"><label>Dosya Açıklaması</label><textarea class="input" id="kr_belge_acik" rows="3" placeholder="isterseniz yüklediğiniz dosya hakkında açıklama girebilirsiniz..."></textarea></div>';
+  ymConfirm(html, {
+    title: 'Dosya Yükleme',
+    okText: '✓ Yükle',
+    cancelText: '✕ Vazgeç'
+  }).then(function(ok) {
+    if (!ok) return;
+    var fileInput = document.getElementById('kr_belge_file');
+    var file = fileInput && fileInput.files && fileInput.files[0];
+    if (!file) return toast('Dosya seçin');
+    if (file.size > 5 * 1024 * 1024) return toast('Dosya boyutu 5MB geçemez');
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var list = dbGet('krediler') || [];
+      var k = list.find(function(x) { return x.id === id; });
+      if (!k) return;
+      k.belgeler = k.belgeler || [];
+      k.belgeler.push({
+        name: file.name,
+        aciklama: (document.getElementById('kr_belge_acik') || {}).value || '',
+        data: e.target.result,
+        tarih: todayISO(),
+        type: file.type
+      });
+      dbSet('krediler', list);
+      pushAct('Kredi belgesi yüklendi: ' + file.name);
+      state._view = { docs: id };
+      go('kredi');
+      toast('Belge sisteme kaydedildi');
+    };
+    reader.readAsDataURL(file);
+  });
+};
+
+window.krediBelgeIndir = function(id, idx) {
+  var k = (dbGet('krediler') || []).find(function(x) { return x.id === id; });
+  if (!k || !k.belgeler || !k.belgeler[idx]) return;
+  var b = k.belgeler[idx];
+  var a = document.createElement('a');
+  a.href = b.data;
+  a.download = b.name || 'belge';
+  a.target = '_blank';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+};
+
+window.krediBelgeGuncelle = function(id, idx) {
+  var k = (dbGet('krediler') || []).find(function(x) { return x.id === id; });
+  if (!k || !k.belgeler || !k.belgeler[idx]) return;
+  var b = k.belgeler[idx];
+  var html = '<div class="field"><label>Dosya Açıklaması</label><textarea class="input" id="kr_belge_acik2" rows="3">' + esc(b.aciklama || '') + '</textarea></div>';
+  ymConfirm(html, {
+    title: 'Açıklama Güncelleme',
+    okText: '✓ Güncelle',
+    cancelText: '✕ Vazgeç'
+  }).then(function(ok) {
+    if (!ok) return;
+    var list = dbGet('krediler') || [];
+    var kk = list.find(function(x) { return x.id === id; });
+    if (!kk || !kk.belgeler[idx]) return;
+    kk.belgeler[idx].aciklama = (document.getElementById('kr_belge_acik2') || {}).value || '';
+    dbSet('krediler', list);
+    state._view = { docs: id };
+    go('kredi');
+    toast('Açıklama güncellendi');
+  });
+};
+
+window.krediBelgeSil = function(id, idx) {
+  ymConfirm('Dikkat! Silinen bir belgeyi geri alamazsınız.<br><br>Silmek istediğinize emin misiniz?', {
+    title: 'Belge Silme Onayı',
+    okText: '✓ Evet',
+    cancelText: '✕ Hayır',
+    danger: true
+  }).then(function(ok) {
+    if (!ok) return;
+    var list = dbGet('krediler') || [];
+    var k = list.find(function(x) { return x.id === id; });
+    if (!k || !k.belgeler) return;
+    k.belgeler.splice(idx, 1);
+    dbSet('krediler', list);
+    state._view = { docs: id };
+    go('kredi');
+    toast('Belge silindi');
+  });
+};
+
+window.krediExcel = function(id) {
+  var k = (dbGet('krediler') || []).find(function(x) { return x.id === id; });
+  if (!k) return;
+  var rows = [['#', 'Tarih', 'Tutar', 'Ödenen']];
+  (k.taksitler || []).forEach(function(t, i) {
+    rows.push([t.no || (i + 1), fmtDateLong(t.tarih), Number(t.tutar) || 0, Number(t.odenen) || 0]);
+  });
+  var csv = rows.map(function(r) { return r.join(';'); }).join('\n');
+  var blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = (k.ad || 'kredi') + '_odeme_takvimi.csv';
+  a.click();
+};
+
+window.krediPdf = function(id) {
+  var k = (dbGet('krediler') || []).find(function(x) { return x.id === id; });
+  if (!k) return;
+  var rows = (k.taksitler || []).map(function(t, i) {
+    return '<tr><td>' + (t.no || (i + 1)) + '</td><td>' + fmtDateLong(t.tarih) + '</td><td style="text-align:right">' + fmtMoneyPlain(t.tutar) + '</td><td style="text-align:right">' + fmtMoneyPlain(t.odenen || 0) + '</td></tr>';
+  }).join('');
+  var html = '<html><head><meta charset="utf-8"><title>' + esc(k.ad) + ' Ödeme Takvimi</title>' +
+    '<style>body{font-family:Arial,sans-serif;padding:30px}h2{margin-bottom:20px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #ddd;padding:8px 12px;text-align:left}th{background:#f1f5f9}</style></head><body>' +
+    '<h2>' + esc(k.ad) + ' ÖDEME TAKVİMİ</h2><table><thead><tr><th>#</th><th>Tarih</th><th>Tutar</th><th>Ödenen</th></tr></thead><tbody>' + rows + '</tbody></table></body></html>';
+  var w = window.open('', '_blank');
+  w.document.write(html);
+  w.document.close();
+  setTimeout(function() { w.print(); }, 300);
 };
 
 pages.ayarlar = function() {
@@ -12388,9 +12879,27 @@ window.yedekIndir = function() {
 /* --- Cari: güncelle / sil --- */
 function cariKey(t) { return (t === 'musteri' || t === 'musteriler') ? 'musteriler' : 'tedarikciler'; }
 window.deleteCari = function(t, id) {
-  return ymConfirm('Silinsin mi?',{title:'Sil',okText:'Sil',cancelText:'İptal',danger:true}).then(function(ok){if(!ok)return;
   var key = cariKey(t);
+  var c = (dbGet(key)||[]).find(function(x){ return x.id === id; });
+  if (!c) return toast('Cari bulunamadı');
+  var bakiye = Number(c.bakiye) || 0;
+  if (Math.abs(bakiye) > 0.009) {
+    return toast('Açık bakiyesi olan cari silinemez. Önce bakiyeyi sıfırlayın. (Bakiye: ' + (typeof fmtMoney==='function'?fmtMoney(bakiye):bakiye) + ')');
+  }
+  var satislar = (dbGet('satislar')||[]).filter(function(s){
+    return (s.musteriId===id || s.cariId===id) && s.durum!=='iptal' && !s.iptal &&
+      (s.belgeTipi==='irsaliye' || s.belgeTipi==='proforma' || s.belgeTipi==='siparis' || s.durum==='taslak' || (Number(s.tutar||0)-Number(s.tahsil||0)>0.009));
+  });
+  var alislar = (dbGet('alislar')||[]).filter(function(a){
+    return (a.tedarikciId===id || a.cariId===id) && a.durum!=='iptal' &&
+      (a.durum==='irsaliye' || a.durum==='taslak' || a.belgeTipi==='irsaliye');
+  });
+  if (satislar.length || alislar.length) {
+    return toast('Bu cariye ait açık satış/alış, irsaliye veya proforma bulunduğu için silinemez. Önce belgeleri kapatın veya iptal edin.');
+  }
+  return ymConfirm('Silinsin mi?',{title:'Sil',okText:'Sil',cancelText:'İptal',danger:true}).then(function(ok){if(!ok)return;
   dbSet(key, dbGet(key).filter(function(x){ return x.id !== id; }));
+  try { if (typeof pushAct==='function') pushAct('Cari silindi: ' + (c.unvan||id)); } catch(e){}
   state._view = {}; go(key); toast('Silindi');
 });
 };
@@ -12432,12 +12941,14 @@ function cariTahsilModal() {
   var v = state._view, t = v.cariType, key = cariKey(t), c = dbGet(key).find(function(x){ return x.id === v.cariId; });
   if (!c) { state._view = {}; return null; }
   var geri = 'state._view={detail:\'' + c.id + '\'};go(\'' + key + '\')';
+  var initT = Math.abs(Number(c.bakiye) || 0);
   return '<div class="modal-bg"><div class="modal"><div class="modal-h">' + (t === 'musteri' ? 'Tahsilat' : 'Ödeme') + ' — ' + esc(c.unvan) + '<button type="button" onclick="' + geri + '">X</button></div><div class="modal-b">' +
     '<div class="field"><label>İşlem</label><select id="ct_tip">' +
     (t === 'musteri' ? '<option value="tahsilat">Tahsilat (müşteriden alınan)</option><option value="odeme">Ödeme / iade (müşteriye verilen)</option>'
       : '<option value="odeme">Ödeme (tedarikçiye yapılan)</option><option value="tahsilat">Tahsilat (tedarikçiden alınan)</option>') + '</select></div>' +
     '<div class="field"><label>Yöntem</label><select id="ct_yon"><option>Nakit</option><option>Kredi Kartı</option><option>Banka</option></select></div>' +
-    '<div class="field"><label>Tutar</label><input id="ct_tutar" type="number" step="0.01" value="' + Math.abs(Number(c.bakiye) || 0) + '"></div>' +
+    '<div class="field"><label>Tutar</label><input id="ct_tutar" type="number" step="0.01" value="' + initT + '" oninput="var el=document.getElementById(\'ct_yazi\');if(el)el.textContent=typeof amountToWords===\'function\'?amountToWords(this.value):\'\'"></div>' +
+    '<div class="field"><label>Yazıyla</label><div id="ct_yazi" style="font-size:13px;color:#0f766e;font-weight:600;padding:6px 0">' + (typeof amountToWords==='function'?amountToWords(initT):'') + '</div></div>' +
     '<div class="field"><label>Tarih</label><input id="ct_tarih" type="date" value="' + todayISO() + '"></div></div>' +
     '<div class="modal-f"><button class="btn btn-ghost" onclick="' + geri + '">Vazgeç</button><button class="btn btn-lime" onclick="cariTahsilKaydet()">Kaydet</button></div></div></div>';
 }
@@ -15232,13 +15743,11 @@ var muh=NAV.filter(function(x){return x.id==='grp-muh'})[0];
 var raporlar=[{id:'raporlar',label:'Satışlar - Alışlar'},{id:'raporFinansal',label:'Finansal Raporlar'},{id:'raporStok',label:'Stok Raporları'},{id:'raporMusteri',label:'Müşteri Listesi'}];
 NAV.length=0;
 [{id:'home',label:'Ana Sayfa',icon:'home'},
- {id:'yantedarikci',label:'YanTedarikçi',icon:'yantedarikci',badge:'yeni'},
  {id:'musteriler',label:'Müşteriler',icon:'users'},
  {id:'tedarikciler',label:'Tedarikçiler',icon:'truck'},
  {id:'grp-urunler',label:'Ürünler',icon:'tag',children:[{id:'urunler',label:'Ürün Listesi'},{id:'depolar',label:'Depolar'},{id:'varyantlar',label:'Varyantlar'}]},
  {id:'satislar',label:'Satışlar',icon:'cart'},
  {id:'alislar',label:'Alışlar',icon:'bag'},
- {id:'teklifler',label:'Teklifler',icon:'file'},
  {id:'grp-nakit',label:'Nakit Yönetimi',icon:'wallet',children:[
    {id:'hesaplar',label:'Hesaplarım'},
    {id:'calisanlar',label:'Çalışanlar'},
