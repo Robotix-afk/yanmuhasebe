@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>YanMuhasebe</title>
+<meta name="robots" content="noindex">
+<style>
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
+font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#0f172a;color:#e2e8f0}
+.box{text-align:center;padding:28px 20px;max-width:420px}
+.logo{font-weight:800;font-size:24px;letter-spacing:-.02em}
+.logo span{color:#a3e635}
+.badge{display:inline-block;margin:12px 0 8px;padding:5px 12px;border-radius:999px;
+background:rgba(163,230,53,.12);color:#bef264;font-size:12px;font-weight:700}
+p{color:#94a3b8;font-size:14px;line-height:1.5;margin:8px 0 0}
+.spin{width:28px;height:28px;border:3px solid #334155;border-top-color:#a3e635;border-radius:50%;
+margin:18px auto 0;animation:s .7s linear infinite}
+@keyframes s{to{transform:rotate(360deg)}}
+.fallback{display:none;margin-top:18px}
+.fallback a{display:inline-block;margin-top:10px;padding:10px 16px;border-radius:10px;
+background:#a3e635;color:#0f172a;font-weight:700;text-decoration:none;font-size:14px}
+</style>
+<script>
+/* 404 kabuğu → index.html yönlendirme (GitHub Pages SPA) */
+(function(){
+  var l=location, host=l.hostname||'';
+  var keep=/github\.io$/i.test(host)?1:0;
+  var seg=l.pathname.split('/').filter(Boolean);
+  var base='/'+seg.slice(0,keep).join('/');
+  if(base.slice(-1)!=='/') base+='/';
+  var rest=seg.slice(keep).join('/').replace(/\/?(index|404)\.html$/i,'').replace(/\/+$/,'');
+  var restLower=(rest||'').toLowerCase();
+  var hash=l.hash||'', search=l.search||'';
+
+  /* YanMali ayrı site */
+  if(restLower==='yanmali'||restLower.indexOf('yanmali/')===0){
+    var sub=restLower==='yanmali'?'':rest.slice(rest.toLowerCase().indexOf('yanmali')+7).replace(/^\/+/,'');
+    l.replace('https://robotix-afk.github.io/yanmali/'+(sub?sub+'/':'')+(hash||''));
+    return;
+  }
+
+  /* YanTedarikçi kısa linkleri */
+  var yt=restLower.match(/^(?:yt|yantedarikci|yan-siparis)(?:\/(?:siparis|magaza))?\/?(ym[a-z0-9]+)?$/i);
+  if(yt){
+    var h=yt[1]?('#yt='+encodeURIComponent(yt[1])):(hash||'');
+    if(hash&&hash.indexOf('yt=')>=0) h=hash;
+    l.replace(l.origin+base+'index.html'+(h||''));
+    return;
+  }
+
+  if(!rest){ l.replace(l.origin+base+'index.html'+(search||'')+(hash||'')); return; }
+
+  /* Alias haritası — index.html ile uyumlu */
+  var ALIASES={
+    'home':'dashboard','anasayfa':'dashboard','dashboard':'dashboard',
+    'giris':'giris-yap','login':'giris-yap','kayit':'kayit-ol','register':'kayit-ol',
+    'musteriler':'musteriler-cari-menusu','tedarikciler':'tedarikciler-cari-menusu',
+    'urunler':'urun-listesi','depolar':'depolar','varyantlar':'varyantlar',
+    'stok':'stok-ekstresi','ozelfiyat':'ozel-fiyat-listesi',
+    'satislar':'satislar','alislar':'alislar',
+    'hesaplar':'hesaplarim','kredi':'krediler','krediler':'krediler',
+    'calisanlar':'calisanlar','masraflar':'masraflar',
+    'fatura':'fatura-belgesi','efatura':'e-fatura','efaturakayit':'e-fatura-kaydi',
+    'gelenefaturalar':'gelen-e-faturalar','olusturulanefaturalar':'olusturulan-e-faturalar',
+    'arsivlenenfaturalar':'arsivlenen-faturalar',
+    'raporlar':'raporlar','raporfinansal':'finansal-raporlar','raporstok':'stok-raporlari',
+    'rapormusteri':'musteri-listesi-rapor',
+    'ayarlar':'ayarlar-genel','profil':'profilim','profilim':'profilim',
+    'kullanicilar':'kullanicilar','tanimlar':'tanimlar',
+    'etiket':'etiket-sablonlari','etiket-sablonlari':'etiket-sablonlari',
+    'destek':'yardim-destek','yardim':'yardim-destek',
+    'fihrist':'fihrist','kilit':'ekran-kilidi','islemler':'islemler',
+    'yantedarikci':'yantedarikci','yan-siparis':'yantedarikci',
+    'yevmiye':'yevmiye-defteri','kebir':'defteri-kebir','mizan':'genel-mizan',
+    'bilanco':'bilanco','gelirtablosu':'gelir-tablosu','hesapplani':'hesap-plani'
+  };
+  var parts=restLower.split('/');
+  var first=parts[0], tail=parts.slice(1).join('/');
+  var mapped=ALIASES[first]||first;
+  var path=mapped+(tail?'/'+tail:'');
+  var q='?p='+encodeURIComponent(path);
+  if(search&&search.length>1){
+    var extra=search.replace(/^\?/,'').split('&').filter(function(x){return x&&x.indexOf('p=')!==0;}).join('&');
+    if(extra) q+='&'+extra;
+  }
+  l.replace(l.origin+base+'index.html'+q+(hash||''));
+
+  /* Yönlendirme başarısızsa ana sayfa linki */
+  setTimeout(function(){
+    var f=document.getElementById('fallback');
+    if(f) f.style.display='block';
+  }, 2500);
+})();
+</script>
+</head>
+<body>
+<div class="box">
+  <div class="logo">Yan<span>Muhasebe</span></div>
+  <div class="badge">26/11/2031'e kadar ÜCRETSİZ</div>
+  <p>Yönlendiriliyor...</p>
+  <div class="spin"></div>
+  <div class="fallback" id="fallback">
+    <p>Sayfa bulunamadı veya yönlendirme gecikti.</p>
+    <a href="./index.html">Ana sayfaya dön</a>
+  </div>
+</div>
+</body>
+</html>
