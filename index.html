@@ -3469,7 +3469,7 @@ function dbSet(k, v) {
 function uid(p) { return (p||'id') + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
 
 /* ========== BULUT SENKRON (web <-> mobil, ym_data) ========== */
-var CLOUD_COLLS = ['yanmaliDavetler','ekipUyeler','musteriler','tedarikciler','urunler','satislar','alislar','masraflar','odemeler','hesaplar','calisanlar','depolar','varyantlar','krediler','faturalar','ozelFiyatlar','stokHareket','hesapHareket','masrafKalemleri','ayarlar','etiketSablon','etiketSablonlari','aktivite','hatirlatmalar','notlar','mobilFaturalar','hesapHareketleri','calisanHareketleri'];
+var CLOUD_COLLS = ['yanmaliDavetler','ekipUyeler','musteriler','tedarikciler','urunler','satislar','alislar','masraflar','odemeler','hesaplar','calisanlar','depolar','varyantlar','krediler','faturalar','gelenFaturalar','ozelFiyatlar','stokHareket','hesapHareket','masrafKalemleri','ayarlar','etiketSablon','etiketSablonlari','aktivite','hatirlatmalar','notlar','mobilFaturalar','hesapHareketleri','calisanHareketleri'];
 var __cloudTimers = {};
 var __cloudPulling = false;
 
@@ -6195,7 +6195,7 @@ function tableHTML(cols, rows) {
 /* MUSTERILER */
 
 
-var YM_MENUS=[['ozet','Ana Sayfa (özet)'],['musteriler','Müşteriler'],['tedarikciler','Tedarikçiler'],['urunler','Ürünler / Stok'],['satislar','Satışlar'],['alislar','Alışlar'],['masraflar','Masraflar'],['hesaplar','Hesaplarım'],['faturalar','Fatura Belgeleri'],['calisanlar_m','Çalışanlar'],['depolar','Depolar'],['krediler','Krediler'],['raporlar','Raporlar']];
+var YM_MENUS=[['ozet','Ana Sayfa (özet)'],['musteriler','Müşteriler'],['tedarikciler','Tedarikçiler'],['urunler','Ürünler / Stok'],['satislar','Satışlar'],['alislar','Alışlar'],['masraflar','Masraflar'],['hesaplar','Hesaplarım'],['faturalar','Gelen E-Faturalar'],['calisanlar_m','Çalışanlar'],['depolar','Depolar'],['krediler','Krediler'],['raporlar','Raporlar']];
 function ymPermsAll(){try{return JSON.parse(localStorage.getItem('ym_yanmali_perms_v1')||'{}')}catch(e){return{}}}
 function ymSelfNo(){return state.user&&state.user.musteriNo!=null?String(state.user.musteriNo):''}
 function ymSvg(p){return '<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+p+'</svg>'}
