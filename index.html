@@ -969,6 +969,27 @@ table.data a.link { color: #1e3a5f; font-weight: 700; }
 }
 @keyframes authSpin { to { transform:rotate(360deg); } }
 .btn-auth:disabled { cursor:wait !important; }
+/* Global bekleme ekranı — yarı saydam arka plan */
+.ym-wait-overlay{
+  position:fixed;inset:0;z-index:300000;
+  display:none;align-items:center;justify-content:center;
+  background:rgba(15,23,42,.35);
+  backdrop-filter:blur(1px);
+  -webkit-backdrop-filter:blur(1px);
+}
+.ym-wait-overlay.on{display:flex!important}
+.ym-wait-box{
+  background:#fff;border-radius:12px;padding:18px 28px;
+  box-shadow:0 12px 40px rgba(15,23,42,.25);
+  display:flex;align-items:center;gap:14px;min-width:220px;
+  border-top:4px solid #2dd4bf;
+}
+.ym-wait-spin{
+  width:22px;height:22px;border-radius:50%;
+  border:3px solid #e2e8f0;border-top-color:#2dd4bf;
+  animation:authSpin .7s linear infinite;flex-shrink:0;
+}
+.ym-wait-text{font-size:15px;font-weight:700;color:#0f172a;letter-spacing:.01em}
 .rc-wrap{margin:14px 0;padding:12px;border:1px dashed #e2e8f0;border-radius:12px;background:#f8fafc;display:flex;flex-direction:column;align-items:center;gap:8px}
 .rc-label{font-size:12px;font-weight:700;color:#64748b}
 #loginCaptcha,#regCaptcha{min-height:78px;display:flex;justify-content:center;align-items:center}
@@ -3337,6 +3358,12 @@ body.sub-locked #content{pointer-events:auto!important;filter:none!important}
 
 <div class="toast" id="toast"></div>
 <div id="modalRoot"></div>
+<div id="ymWaitOverlay" class="ym-wait-overlay" style="display:none" aria-live="polite" aria-busy="true">
+  <div class="ym-wait-box">
+    <div class="ym-wait-spin"></div>
+    <div class="ym-wait-text">Lütfen bekleyin...</div>
+  </div>
+</div>
 
 <script>
 /* Tarayıcı depolamayı engellerse (Brave kalkanı vb.) geçici bellekte çalış */
@@ -3469,7 +3496,7 @@ function dbSet(k, v) {
 function uid(p) { return (p||'id') + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
 
 /* ========== BULUT SENKRON (web <-> mobil, ym_data) ========== */
-var CLOUD_COLLS = ['yanmaliDavetler','ekipUyeler','musteriler','tedarikciler','urunler','satislar','alislar','masraflar','odemeler','hesaplar','calisanlar','depolar','varyantlar','krediler','faturalar','gelenFaturalar','ozelFiyatlar','stokHareket','hesapHareket','masrafKalemleri','ayarlar','etiketSablon','etiketSablonlari','aktivite','hatirlatmalar','notlar','mobilFaturalar','hesapHareketleri','calisanHareketleri'];
+var CLOUD_COLLS = ['yanmaliDavetler','ekipUyeler','musteriler','tedarikciler','urunler','satislar','alislar','masraflar','odemeler','hesaplar','calisanlar','depolar','varyantlar','krediler','demirbaslar','faturalar','gelenFaturalar','ozelFiyatlar','stokHareket','hesapHareket','masrafKalemleri','ayarlar','etiketSablon','etiketSablonlari','aktivite','hatirlatmalar','notlar','mobilFaturalar','hesapHareketleri','calisanHareketleri'];
 var __cloudTimers = {};
 var __cloudPulling = false;
 
@@ -4836,6 +4863,7 @@ var NAV = [
     { id: 'hesaplar', label: 'Hesaplarım' },
     { id: 'masraflar', label: 'Masraflar' },
     { id: 'kredi', label: 'Krediler' },
+    { id: 'demirbaslar', label: 'Demirbaşlar' },
     { id: 'calisanlar', label: 'Çalışanlar' },
     { id: 'gelenEfaturalar', label: 'Gelen E-Faturalar' },
     { id: 'olusturulanEfaturalar', label: 'Oluşturulan E-Faturalar' },
@@ -4919,7 +4947,7 @@ function buildNav() {
   if (el) el.innerHTML = html;
   try {
     var openIds = { 'grp-nakit': 1 };
-    if (state.page === 'gelenEfaturalar' || state.page === 'olusturulanEfaturalar' || state.page === 'arsivlenenFaturalar' || state.page === 'efaturaKayit' || state.page === 'fatura' || state.page === 'gelenFaturalar' || state.page === 'hesaplar' || state.page === 'masraflar' || state.page === 'kredi' || state.page === 'calisanlar') openIds['grp-nakit'] = 1;
+    if (state.page === 'gelenEfaturalar' || state.page === 'olusturulanEfaturalar' || state.page === 'arsivlenenFaturalar' || state.page === 'efaturaKayit' || state.page === 'fatura' || state.page === 'gelenFaturalar' || state.page === 'hesaplar' || state.page === 'masraflar' || state.page === 'kredi' || state.page === 'demirbaslar' || state.page === 'calisanlar') openIds['grp-nakit'] = 1;
     Object.keys(openIds).forEach(function(gid) {
       var btn = el && el.querySelector('[data-group="' + gid + '"]');
       var sub = document.getElementById('sub-' + gid);
@@ -4942,7 +4970,7 @@ var TITLES = {
   takvim: 'Takvim', musteriler: 'Müşteriler', tedarikciler: 'Tedarikçiler',
   urunler: 'Ürünler', depolar: 'Depolar', varyantlar: 'Varyantlar', stok: 'Stok Ekstresi', ozelfiyat: 'Özel Fiyat Listesi',
   satislar: 'Satışlar', alislar: 'Alışlar', gelenEfaturalar:'Gelen E-Faturalar',efaturaKayit:'E-Fatura Kaydı', fatura: 'Faturalar', gelenEfaturalar: 'Gelen E-Faturalar', efaturaKayit: 'E-Fatura Kaydı', efatura: 'e-Fatura', destek: 'Yardım / Destek',
-  masraflar: 'Masraflar', hesaplar: 'Hesaplarım', kredi: 'Krediler', calisanlar: 'Çalışanlar',
+  masraflar: 'Masraflar', hesaplar: 'Hesaplarım', kredi: 'Krediler', demirbaslar: 'Demirbaşlar', calisanlar: 'Çalışanlar',
   raporlar: 'Raporlar', profilim: 'Profilim', ayarlar: 'Ayarlar', kullanicilar: 'Kullanıcılar', tanimlar: 'Tanımlar',
   'fatura-ayar': 'YanMuhasebe Fatura', etiket: 'Etiket Şablonları',
   yanmali: 'YanMali — Mali Müşavir',
@@ -4965,8 +4993,6 @@ window.flipHomeStat = function(kind) {
 };
 
 function go(page) {
-  if (page === 'yanmali') { try { window.open('https://robotix-afk.github.io/yanmali/', '_blank'); } catch(e) {} return; }
-
   try {
     if (state.user && typeof ymIsEmailVerifyLocked==='function' && ymIsEmailVerifyLocked()) {
       var allowVerify = { home:1, destek:1, profilim:1, locked:1 };
@@ -5039,6 +5065,34 @@ window.closeModal = function() {
   }
 };
 
+/* Global "Lütfen bekleyin..." ekranı (yarı saydam) */
+window.ymShowWait = function(msg) {
+  try {
+    var el = document.getElementById('ymWaitOverlay');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'ymWaitOverlay';
+      el.className = 'ym-wait-overlay';
+      el.innerHTML = '<div class="ym-wait-box"><div class="ym-wait-spin"></div><div class="ym-wait-text">Lütfen bekleyin...</div></div>';
+      document.body.appendChild(el);
+    }
+    var t = el.querySelector('.ym-wait-text');
+    if (t) t.textContent = msg || 'Lütfen bekleyin...';
+    el.classList.add('on');
+    el.style.display = 'flex';
+    if (window.__ymWaitTimer) clearTimeout(window.__ymWaitTimer);
+    // Takılırsa en fazla 30 sn
+    window.__ymWaitTimer = setTimeout(function(){ try { ymHideWait(); } catch(e){} }, 30000);
+  } catch (e) {}
+};
+window.ymHideWait = function() {
+  try {
+    if (window.__ymWaitTimer) { clearTimeout(window.__ymWaitTimer); window.__ymWaitTimer = null; }
+    var el = document.getElementById('ymWaitOverlay');
+    if (el) { el.classList.remove('on'); el.style.display = 'none'; }
+  } catch (e) {}
+};
+
 /** Tarayıcı confirm() yerine özel onay. Promise döner; callback de verilebilir: ymConfirm(msg, cb) */
 
 window.ymConfirm = function(message, optsOrCb, maybeCb) {
@@ -5058,16 +5112,23 @@ window.ymConfirm = function(message, optsOrCb, maybeCb) {
         '<button type="button" class="btn btn-ghost" id="ymConfCancel">' + esc(cancelText) + '</button>' +
         '<button type="button" class="' + (danger ? 'btn btn-danger' : 'btn btn-teal') + '" id="ymConfOk">' + esc(okText) + '</button>' +
       '</div>';
-    openModal(title, '<div class="ym-confirm-msg">' + esc(String(message || '')) + '</div>', footer);
+    // HTML form/mesaj ise escape etme; düz metinde <br> ve kaçış uygula
+    var raw = String(message || '');
+    var isHtml = opts.html === true || /<\s*(div|br|input|textarea|label|span|p|strong|b|i|ul|li|table|tr|td|button|select|option|h[1-6]|form|a)\b/i.test(raw);
+    var body = isHtml ? raw : esc(raw).replace(/\n/g, '<br>');
+    openModal(title, '<div class="ym-confirm-msg">' + body + '</div>', footer);
     var ok = document.getElementById('ymConfOk');
     var cancel = document.getElementById('ymConfCancel');
     function finish(v) {
       window.__ymConfirmResolve = null;
-      // closeModal __ymConfirmResolve'u false ile çağırabilir; önce temizledik
-      var root = document.getElementById('modalRoot');
-      if (root) root.innerHTML = '';
+      // Önce resolve: .then() form alanlarını okuyabilsin (DOM henüz duruyor)
       resolve(!!v);
       if (v && cb) { try { cb(); } catch (e) { console.warn(e); } }
+      // Modal'ı microtask sonrası kapat
+      setTimeout(function() {
+        var root = document.getElementById('modalRoot');
+        if (root) root.innerHTML = '';
+      }, 0);
     }
     if (ok) ok.onclick = function(e) { e.preventDefault(); e.stopPropagation(); finish(true); };
     if (cancel) cancel.onclick = function(e) { e.preventDefault(); e.stopPropagation(); finish(false); };
@@ -6094,12 +6155,54 @@ pages.home = function() {
   var acikHesap = 0; musteriler.forEach(function(m) { var b = Number(m.bakiye) || 0; if (b > 0) acikHesap += b; });
   var varlik = kasa + stok, borc = acikHesap, maxV = Math.max(varlik, 1);
 
-  /* Vadesi geçen alacaklar */
-  var gecen = satislar.filter(function(s) { return s.vade && String(s.vade).slice(0,10) < today && s.durum !== 'iptal' && s.durum !== 'odendi' && !s.odendi; })
-    .sort(function(a, b) { return String(a.vade).localeCompare(String(b.vade)); }).slice(0, 4);
-  var gecenHtml = gecen.length ? gecen.map(function(s) {
-    var gun = Math.max(1, Math.round((now - new Date(s.vade)) / 86400000));
-    return '<div class="hm-item"><span class="hm-nm">' + esc(s.musteri || s.cari || s.unvan || s.musteriAd || 'Müşteri') + '</span><span>' + fmtMoney(s.tutar) + '</span><small>' + gun + ' gün</small></div>';
+  /* Vadesi geçen açık hesap alacaklar — cari bakiyesiyle uyumlu */
+  var musById = {};
+  musteriler.forEach(function(m) { musById[String(m.id)] = m; });
+  var gecenMap = {};
+  satislar.forEach(function(s) {
+    if (!s.vade) return;
+    if (s.durum === 'iptal' || s.durum === 'odendi' || s.odendi) return;
+    if (s.belgeTipi === 'proforma' || s.durum === 'proforma' || s.durum === 'taslak') return;
+    var vade = String(s.vade).slice(0, 10);
+    if (!vade || vade >= today) return;
+    var mid = String(s.musteriId || s.cariId || '');
+    if (!mid || mid === 'perakende') return;
+    var tutar = Number(s.tutar) || Number(s.genelToplam) || 0;
+    var tahsil = Number(s.tahsil) || 0;
+    if (!tahsil && Array.isArray(s.odemeler)) {
+      s.odemeler.forEach(function(o) { tahsil += Number(o.tutar) || 0; });
+    }
+    var kalan = Math.max(0, tutar - tahsil);
+    if (kalan <= 0.009) return;
+    if (!gecenMap[mid]) {
+      gecenMap[mid] = {
+        id: mid,
+        ad: s.musteri || s.cari || s.unvan || s.musteriAd || 'Müşteri',
+        kalan: 0,
+        vade: vade
+      };
+    }
+    gecenMap[mid].kalan += kalan;
+    if (vade < gecenMap[mid].vade) gecenMap[mid].vade = vade;
+  });
+  var gecen = Object.keys(gecenMap).map(function(k) {
+    var g = gecenMap[k];
+    var m = musById[k];
+    if (m) {
+      g.ad = m.unvan || m.ad || m.name || g.ad;
+      // Cari bakiyesiyle sınırla (pozitif = müşteri borçlu)
+      var bak = Number(m.bakiye) || 0;
+      if (bak <= 0) return null;
+      g.kalan = Math.min(g.kalan, bak);
+    } else if (g.kalan <= 0) {
+      return null;
+    }
+    if (g.kalan <= 0.009) return null;
+    g.gun = Math.max(1, Math.round((now - new Date(g.vade)) / 86400000));
+    return g;
+  }).filter(Boolean).sort(function(a, b) { return b.gun - a.gun || b.kalan - a.kalan; });
+  var gecenHtml = gecen.length ? gecen.slice(0, 4).map(function(g) {
+    return '<div class="hm-item"><span class="hm-nm">' + esc(g.ad) + '</span><span>' + fmtMoney(g.kalan) + '</span><small>' + g.gun + ' gün</small></div>';
   }).join('') : '<p class="hm-empty">Vadesi geçmiş alacağınız bulunmuyor.</p>';
 
   /* Banner — 26/11/2031'e kadar ücretsiz */
@@ -6923,8 +7026,11 @@ function cariDetail(type, id) {
     : '<div class="sec-empty">Bu '+(isM?'müşterinin':'tedarikçinin')+' daha önceden kayıtlı '+(isM?'satışı':'alışı')+' yok.</div>';
 
   var odHtml = odemeler.length
-    ? '<table class="data"><thead><tr><th>Tarih</th><th>Tutar</th></tr></thead><tbody>' +
-      odemeler.slice(0,10).map(function(o){ return '<tr><td>'+fmtDate(o.tarih||o.created)+'</td><td>'+fmtMoney(o.tutar)+'</td></tr>'; }).join('') +
+    ? '<table class="data"><thead><tr><th></th><th>Tarih</th><th>Tutar</th><th>Şekli</th></tr></thead><tbody>' +
+      odemeler.slice(0,15).map(function(o){
+        var sekil = o.yontem || o.hesapAd || (o.tip==='tahsilat'?'Nakit':'Nakit');
+        return '<tr><td><span style="color:#22c55e">+</span></td><td>'+fmtDate(o.tarih||o.created)+'</td><td>'+fmtMoney(o.tutar)+'</td><td>'+esc(sekil)+'</td></tr>';
+      }).join('') +
       '</tbody></table>'
     : '<div class="sec-empty">'+(isM?'Bu müşterinin daha önceden kayıtlı ödemesi yok.':'Bu tedarikçiye hiç ödeme yapmamışsınız.')+'</div>';
 
@@ -6936,29 +7042,26 @@ function cariDetail(type, id) {
     ? '<button type="button" class="btn btn-dark btn-sm" onclick="state._view={mode:\'belge\',cariId:\''+id+'\'};go(\'satislar\')">Satış Yap</button>' +
       '<div class="dd" id="ddTahsil"><button type="button" class="btn btn-teal btn-sm" onclick="toggleDd(\'ddTahsil\')">Tahsilat / Ödeme ▾</button>' +
       '<div class="dd-menu">' +
-      '<button type="button" onclick="closeAllDd();openCariTahsil(\''+id+'\',\'musteri\',\'Nakit\')">Nakit Tahsilat / Ödeme</button>' +
-      '<button type="button" onclick="closeAllDd();openCariTahsil(\''+id+'\',\'musteri\',\'Kredi Kartı\')">Kredi Kartı</button>' +
-      '<button type="button" onclick="closeAllDd();openCariTahsil(\''+id+'\',\'musteri\',\'Banka\')">Banka Havalesi / EFT</button>' +
-      '<button type="button" onclick="closeAllDd();cariBakiyeDuzelt(\''+id+'\',\'musteri\')">Bakiye Düzelt</button>' +
+      '<button type="button" onclick="closeAllDd();openCariTahsil(\''+id+'\',\'musteri\',\'Nakit\')">Nakit - Kredi Kartı - Banka</button>' +
+      '<button type="button" onclick="closeAllDd();cariBakiyeDuzelt(\''+id+'\',\'musteri\')">Bakiye düzelt</button>' +
       '</div></div>' +
+      '<button type="button" class="btn btn-ghost btn-sm" onclick="go(\'musteriler\')">Tahsilat İste</button>' +
       '<div class="dd" id="ddEkstre"><button type="button" class="btn btn-ghost btn-sm" onclick="toggleDd(\'ddEkstre\')">Hesap Ekstresi ▾</button>' +
-      '<div class="dd-menu"><button type="button" onclick="closeAllDd();openCariEkstre(\''+id+'\',\'musteri\')">Hesap Ekstresi</button><button type="button" onclick="closeAllDd();cariEkstre(\''+id+'\',\'musteri\',2)">Mutabakat Mektubu</button></div></div>' +
+      '<div class="dd-menu"><button type="button" onclick="closeAllDd();cariEkstre(\''+id+'\',\'musteri\',0)">Ekstre</button><button type="button" onclick="closeAllDd();cariEkstre(\''+id+'\',\'musteri\',1)">Detaylı Ekstre</button></div></div>' +
       '<div class="dd" id="ddDiger"><button type="button" class="btn btn-rose btn-sm" onclick="toggleDd(\'ddDiger\')">Diğer İşlemler ▾</button>' +
       '<div class="dd-menu">' +
       '<button type="button" onclick="closeAllDd();state._view={form:true,edit:\''+id+'\'};go(\'musteriler\')">Müşteri Bilgilerini Güncelle</button>' +
-      '<button type="button" onclick="closeAllDd();state._view={mode:\'alis\',cariId:\''+id+'\'};go(\'alislar\')">Alış Yap</button>' +
+      '<button type="button" onclick="closeAllDd();cariAlisSec(\''+id+'\')">Alış Yap</button>' +
       '<button type="button" onclick="closeAllDd();deleteCari(\'musteriler\',\''+id+'\')">Müşteriyi Sil</button>' +
       '</div></div>'
     : '<button type="button" class="btn btn-dark btn-sm" onclick="state._view={mode:\'belge\',cariId:\''+id+'\'};go(\'alislar\')">Alış Yap</button>' +
       '<div class="dd" id="ddTahsil"><button type="button" class="btn btn-teal btn-sm" onclick="toggleDd(\'ddTahsil\')">Ödeme / Tahsilat ▾</button>' +
       '<div class="dd-menu">' +
-      '<button type="button" onclick="closeAllDd();openCariTahsil(\''+id+'\',\'tedarikci\',\'Nakit\')">Nakit Ödeme / Tahsilat</button>' +
-      '<button type="button" onclick="closeAllDd();openCariTahsil(\''+id+'\',\'tedarikci\',\'Kredi Kartı\')">Kredi Kartı</button>' +
-      '<button type="button" onclick="closeAllDd();openCariTahsil(\''+id+'\',\'tedarikci\',\'Banka\')">Banka Havalesi / EFT</button>' +
-      '<button type="button" onclick="closeAllDd();cariBakiyeDuzelt(\''+id+'\',\'tedarikci\')">Bakiye Düzelt</button>' +
+      '<button type="button" onclick="closeAllDd();openCariTahsil(\''+id+'\',\'tedarikci\',\'Nakit\')">Nakit - Kredi Kartı - Banka</button>' +
+      '<button type="button" onclick="closeAllDd();cariBakiyeDuzelt(\''+id+'\',\'tedarikci\')">Bakiye düzelt</button>' +
       '</div></div>' +
       '<div class="dd" id="ddEkstre"><button type="button" class="btn btn-ghost btn-sm" onclick="toggleDd(\'ddEkstre\')">Hesap Ekstresi ▾</button>' +
-      '<div class="dd-menu"><button type="button" onclick="closeAllDd();openCariEkstre(\''+id+'\',\'tedarikci\')">Hesap Ekstresi</button><button type="button" onclick="closeAllDd();cariEkstre(\''+id+'\',\'tedarikci\',2)">Mutabakat Mektubu</button></div></div>' +
+      '<div class="dd-menu"><button type="button" onclick="closeAllDd();cariEkstre(\''+id+'\',\'tedarikci\',0)">Ekstre</button><button type="button" onclick="closeAllDd();cariEkstre(\''+id+'\',\'tedarikci\',1)">Detaylı Ekstre</button></div></div>' +
       '<div class="dd" id="ddDiger"><button type="button" class="btn btn-rose btn-sm" onclick="toggleDd(\'ddDiger\')">Diğer İşlemler ▾</button>' +
       '<div class="dd-menu">' +
       '<button type="button" onclick="closeAllDd();state._view={form:true,edit:\''+id+'\'};go(\'tedarikciler\')">Tedarikçi Bilgilerini Güncelle</button>' +
@@ -6988,9 +7091,7 @@ function cariDetail(type, id) {
       '<div class="cari-note-bubble" onclick="editCariNote(\''+key+'\',\''+id+'\')">'+(m.not ? esc(m.not) : (isM?'Bu müşteri ile ilgili not kaydetmek için tıklayın.':'Bu tedarikçi ile ilgili not kaydetmek için tıklayın.'))+'</div>' +
     '</div>' +
     '<div class="cari-kpis">' +
-      '<div class="cari-kpi k-red"><div class="k-title">Açık Bakiyesi</div><div class="k-val">'+balAbs+'</div><div class="k-sub">'+esc(balWord)+'</div></div>' +
-      '<div class="cari-kpi k-blue"><div class="k-title">Çek Bakiyesi</div><div class="k-val">'+fmtMoney(0)+'</div></div>' +
-      '<div class="cari-kpi k-blue2"><div class="k-title">Senet Bakiyesi</div><div class="k-val">'+fmtMoney(0)+'</div></div>' +
+      '<div class="cari-kpi k-red" style="cursor:pointer" title="Ortalama vade" onclick="cariOrtalamaVade(\''+id+'\',\''+type+'\')"><div class="k-title">Açık Bakiyesi</div><div class="k-val">'+balAbs+'</div><div class="k-sub">'+esc(balWord)+'</div></div>' +
       '<div class="cari-kpi k-green"><div class="k-title">Cirosu</div><div class="k-val">'+fmtMoney(ciro)+'</div></div>' +
     '</div>' +
     '<div class="cari-actions">'+actions+'</div>' +
@@ -12346,25 +12447,31 @@ window.krediBelgeYukleModal = function(id) {
     var file = fileInput && fileInput.files && fileInput.files[0];
     if (!file) return toast('Dosya seçin');
     if (file.size > 5 * 1024 * 1024) return toast('Dosya boyutu 5MB geçemez');
+    try { ymShowWait('Lütfen bekleyin...'); } catch (e) {}
     var reader = new FileReader();
     reader.onload = function(e) {
-      var list = dbGet('krediler') || [];
-      var k = list.find(function(x) { return x.id === id; });
-      if (!k) return;
-      k.belgeler = k.belgeler || [];
-      k.belgeler.push({
-        name: file.name,
-        aciklama: (document.getElementById('kr_belge_acik') || {}).value || '',
-        data: e.target.result,
-        tarih: todayISO(),
-        type: file.type
-      });
-      dbSet('krediler', list);
-      pushAct('Kredi belgesi yüklendi: ' + file.name);
-      state._view = { docs: id };
-      go('kredi');
-      toast('Belge sisteme kaydedildi');
+      try {
+        var list = dbGet('krediler') || [];
+        var k = list.find(function(x) { return x.id === id; });
+        if (!k) return;
+        k.belgeler = k.belgeler || [];
+        k.belgeler.push({
+          name: file.name,
+          aciklama: (document.getElementById('kr_belge_acik') || {}).value || '',
+          data: e.target.result,
+          tarih: todayISO(),
+          type: file.type
+        });
+        dbSet('krediler', list);
+        pushAct('Kredi belgesi yüklendi: ' + file.name);
+        state._view = { docs: id };
+        go('kredi');
+        toast('Belge sisteme kaydedildi');
+      } finally {
+        try { ymHideWait(); } catch (e2) {}
+      }
     };
+    reader.onerror = function() { try { ymHideWait(); } catch (e) {} toast('Dosya okunamadı'); };
     reader.readAsDataURL(file);
   });
 };
@@ -12421,6 +12528,332 @@ window.krediBelgeSil = function(id, idx) {
     go('kredi');
     toast('Belge silindi');
   });
+};
+
+/* ========== DEMİRBAŞLAR ========== */
+function demFind(id) {
+  return (dbGet('demirbaslar') || []).find(function(x) { return String(x.id) === String(id); });
+}
+pages.demirbaslar = function() {
+  var v = state._view || {};
+  if (v.docs) return demDocsView(v.docs);
+  if (v.detail) return demDetailView(v.detail);
+  var list = (dbGet('demirbaslar') || []).slice().reverse();
+  var info =
+    '<div class="card" style="background:#fef9c3;border:1px solid #fde68a;margin-bottom:14px">' +
+    '<div class="card-b" style="color:#854d0e;font-size:13.5px;line-height:1.65">' +
+    '<div style="font-weight:700;margin-bottom:6px;color:#b45309">!</div>' +
+    'Araç, telefon, bilgisayar vs her türlü demirbaş varlığınızı kaydedebilirsiniz.<br>' +
+    'Demirbaşlarınız ile ilgili önemli belgeleri yükleyebilirsiniz.<br>' +
+    'Örneğin alış faturası, garanti belgesi, tamirat fişi gibi belgeleri taratıp veya resmini çekip saklayabilirsiniz. Böylece lazım olduğu anda kolaylıkla bulursunuz.<br><br>' +
+    'Ayrıca demirbaşlarınız ile ilgili önemli tarihleri de kaydedebilirsiniz. Örneğin araçlarınız için muayene zamanlarını, sigorta bitiş tarihlerini, elektronik cihazlarınız için garanti bitiş tarihlerini kaydederseniz zamanı geldiğinde size hatırlatırız.<br><br>' +
+    'Yukarıdaki <strong style="color:#16a34a">+ Yeni Demirbaş Ekle</strong> düğmesini kullanarak demirbaşlarınızı işleyin.' +
+    '</div></div>';
+  var cards = list.map(function(d) {
+    var id = String(d.id || '').replace(/'/g, '');
+    return '<div class="card" style="margin-bottom:10px;cursor:pointer;overflow:hidden" onclick="state._view={detail:\'' + id + '\'};go(\'demirbaslar\')">' +
+      '<div style="background:#0ea5e9;color:#fff;padding:12px 16px;font-weight:700;font-size:15px">' + esc(d.ad || 'Demirbaş') + '</div>' +
+      '<div class="card-b" style="font-size:13px;color:#64748b">' +
+      (d.seriNo ? '<div>Seri No: ' + esc(d.seriNo) + '</div>' : '') +
+      (d.alisTarih ? '<div>Alış: ' + esc(fmtDate(d.alisTarih)) + '</div>' : '') +
+      (d.fiyat != null && d.fiyat !== '' ? '<div>Fiyat: ' + fmtMoney(d.fiyat) + '</div>' : '') +
+      '</div></div>';
+  }).join('');
+  return '<div class="toolbar" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">' +
+    '<button type="button" class="btn btn-lime" onclick="demYeniModal()">+ Yeni Demirbaş Ekle</button>' +
+    '<button type="button" class="btn" style="background:#f59e0b;color:#fff;border:0" onclick="demRapor()">Rapor</button>' +
+    '</div>' + info + (cards || '');
+};
+
+function demDetailView(id) {
+  var d = demFind(id);
+  if (!d) { state._view = {}; return pages.demirbaslar(); }
+  var hat = (d.hatirlatmalar || []);
+  var hatHtml = hat.length ? hat.map(function(h, i) {
+    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:1px solid #e2e8f0">' +
+      '<div><strong>' + esc(h.baslik || 'Hatırlatma') + '</strong><div style="font-size:12px;color:#64748b">' + esc(fmtDate(h.tarih)) + (h.aciklama ? ' — ' + esc(h.aciklama) : '') + '</div></div>' +
+      '<button type="button" class="btn btn-sm" style="background:#ef4444;color:#fff;border:0" onclick="demHatSil(\'' + id + '\',' + i + ')">Sil</button></div>';
+  }).join('') : '<div class="card" style="background:#fef9c3;border:1px solid #fde68a"><div class="card-b" style="color:#854d0e;font-size:13px;line-height:1.55">' +
+    'Bu demirbaş için herhangi bir hatırlatma tarihi eklenmemiş.<br>Garanti süresi bitimi, araç muayenesi, sigorta yenileme vs gibi önemli tarihleri kaydedebilirsiniz. Zamanı gelince size hatırlatırız.</div></div>';
+  return '<div class="card" style="overflow:hidden;margin-bottom:14px">' +
+    '<div style="background:#0369a1;color:#fff;padding:14px 18px;font-weight:700;font-size:16px">' + esc(d.ad || '') + '</div>' +
+    '<div class="card-b" style="font-size:14px;line-height:1.9">' +
+    '<div style="display:grid;grid-template-columns:120px 1fr;gap:4px 12px;max-width:480px">' +
+    '<span style="color:#94a3b8">Seri No</span><span>' + esc(d.seriNo || '—') + '</span>' +
+    '<span style="color:#94a3b8">Alış Tarihi</span><span>' + esc(d.alisTarih ? fmtDate(d.alisTarih) : '—') + '</span>' +
+    '<span style="color:#94a3b8">Fiyatı</span><span>' + (d.fiyat != null && d.fiyat !== '' ? fmtMoney(d.fiyat) : '—') + '</span>' +
+    '<span style="color:#94a3b8">Not</span><span>' + esc(d.aciklama || '—') + '</span>' +
+    '</div></div></div>' +
+    '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px">' +
+    '<button type="button" class="btn" style="background:#38bdf8;color:#fff;border:0" onclick="demGuncelleModal(\'' + id + '\')">Güncelle</button>' +
+    '<button type="button" class="btn" style="background:#22c55e;color:#fff;border:0" onclick="demHatModal(\'' + id + '\')">Hatırlatma Tarihi Ekle</button>' +
+    '<button type="button" class="btn" style="background:#ef4444;color:#fff;border:0" onclick="demSil(\'' + id + '\')">Demirbaşı Sil</button>' +
+    '<button type="button" class="btn" style="background:#7c3aed;color:#fff;border:0" onclick="state._view={docs:\'' + id + '\'};go(\'demirbaslar\')">Dökümanlar</button>' +
+    '<button type="button" class="btn btn-ghost" onclick="state._view={};go(\'demirbaslar\')">Geri</button>' +
+    '</div>' +
+    '<div class="card" style="overflow:hidden"><div style="background:#1e293b;color:#fff;padding:10px 14px;font-weight:700;font-size:13px;letter-spacing:.04em">HATIRLATMA TARİHLERİ</div><div class="card-b" style="padding:0">' + hatHtml + '</div></div>';
+}
+
+function demDocsView(id) {
+  var d = demFind(id);
+  if (!d) { state._view = {}; return pages.demirbaslar(); }
+  var belgeler = d.belgeler || [];
+  var listHtml = belgeler.map(function(b, i) {
+    return '<div style="display:flex;align-items:center;justify-content:space-between;background:#0ea5e9;color:#fff;border-radius:8px;padding:12px 16px;margin-bottom:10px;gap:10px;flex-wrap:wrap">' +
+      '<div><div style="font-weight:700">' + esc(b.name || 'belge') + '</div><div style="font-size:12px;opacity:.9">' + esc(b.aciklama || '') + '</div></div>' +
+      '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">' +
+      '<span style="font-size:12px;opacity:.85">' + esc(fmtDate(b.tarih)) + '</span>' +
+      '<button type="button" class="btn btn-sm" style="background:#22c55e;color:#fff;border:0" onclick="demBelgeIndir(\'' + id + '\',' + i + ')">İndir</button>' +
+      '<button type="button" class="btn btn-sm" style="background:#f59e0b;color:#fff;border:0" onclick="demBelgeGuncelle(\'' + id + '\',' + i + ')">Güncelle</button>' +
+      '<button type="button" class="btn btn-sm" style="background:#ef4444;color:#fff;border:0" onclick="demBelgeSil(\'' + id + '\',' + i + ')">Sil</button>' +
+      '</div></div>';
+  }).join('');
+  return '<div class="toolbar" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">' +
+    '<button type="button" class="btn btn-lime" onclick="demBelgeYukleModal(\'' + id + '\')">+ Yeni Belge Yükle</button>' +
+    '<button type="button" class="btn" style="background:#f59e0b;color:#fff;border:0" onclick="state._view={detail:\'' + id + '\'};go(\'demirbaslar\')">Geri Dön</button>' +
+    '</div>' +
+    '<div style="background:#e8d5b7;border-radius:8px;padding:20px;margin:0 0 16px;text-align:center;font-weight:700;font-size:18px;color:#5c4a32">' + esc(d.ad || '') + '</div>' +
+    (listHtml || '<div class="card" style="background:#fef9c3;border:1px solid #fde68a"><div class="card-b" style="color:#854d0e;font-size:13px;line-height:1.55">' +
+    'Demirbaşınız ile ilgili belgeleri (alış faturası, garanti belgesi...) taratıp veya resmini çekip buraya yükleyebilirsiniz.<br>Dilediğiniz zaman da buradan tekrar indirebilirsiniz.<br><br>' +
+    'Belge yüklemek için yukarıdaki <strong>+ Yeni Belge Yükle</strong> düğmesini kullanın.</div></div>');
+}
+
+window.demYeniModal = function() {
+  var html =
+    '<div class="field"><label>Demirbaş Adı</label><input class="input" id="dm_ad" placeholder=""></div>' +
+    '<div class="field"><label>Açıklaması</label><textarea class="input" id="dm_acik" rows="2"></textarea></div>' +
+    '<div class="field"><label>Seri No</label><input class="input" id="dm_seri" placeholder="varsa seri no, plaka no vs girebilirsiniz."></div>' +
+    '<div class="field"><label>Alış Tarihi <span style="color:#94a3b8;font-weight:400">(isteğe bağlı)</span></label><input class="input" id="dm_alis" type="date"></div>' +
+    '<div class="field"><label>Fiyatı <span style="color:#94a3b8;font-weight:400">(isteğe bağlı)</span></label><input class="input" id="dm_fiyat" type="number" step="0.01"></div>';
+  ymConfirm(html, { title: 'Demirbaş Tanımı', okText: 'Kaydet', cancelText: 'Vazgeç' }).then(function(ok) {
+    if (!ok) return;
+    var ad = ((document.getElementById('dm_ad') || {}).value || '').trim();
+    if (!ad) return toast('Demirbaş adı zorunlu');
+    var list = dbGet('demirbaslar') || [];
+    var rec = {
+      id: uid('dm'),
+      ad: ad,
+      aciklama: ((document.getElementById('dm_acik') || {}).value || '').trim(),
+      seriNo: ((document.getElementById('dm_seri') || {}).value || '').trim(),
+      alisTarih: ((document.getElementById('dm_alis') || {}).value || ''),
+      fiyat: parseFloat((document.getElementById('dm_fiyat') || {}).value) || null,
+      hatirlatmalar: [],
+      belgeler: [],
+      created: new Date().toISOString()
+    };
+    list.push(rec);
+    dbSet('demirbaslar', list);
+    try { pushAct('Demirbaş eklendi: ' + ad); } catch (e) {}
+    toast('Demirbaş tanımı kaydedildi');
+    state._view = { detail: rec.id };
+    go('demirbaslar');
+  });
+};
+
+window.demGuncelleModal = function(id) {
+  var d = demFind(id);
+  if (!d) return;
+  var html =
+    '<div class="field"><label>Demirbaş Adı</label><input class="input" id="dm_ad" value="' + esc(d.ad || '') + '"></div>' +
+    '<div class="field"><label>Açıklaması</label><textarea class="input" id="dm_acik" rows="2">' + esc(d.aciklama || '') + '</textarea></div>' +
+    '<div class="field"><label>Seri No</label><input class="input" id="dm_seri" value="' + esc(d.seriNo || '') + '"></div>' +
+    '<div class="field"><label>Alış Tarihi</label><input class="input" id="dm_alis" type="date" value="' + esc(d.alisTarih || '') + '"></div>' +
+    '<div class="field"><label>Fiyatı</label><input class="input" id="dm_fiyat" type="number" step="0.01" value="' + (d.fiyat != null ? d.fiyat : '') + '"></div>';
+  ymConfirm(html, { title: 'Demirbaş Güncelle', okText: 'Kaydet', cancelText: 'Vazgeç' }).then(function(ok) {
+    if (!ok) return;
+    var list = dbGet('demirbaslar') || [];
+    var x = list.find(function(r) { return String(r.id) === String(id); });
+    if (!x) return;
+    x.ad = ((document.getElementById('dm_ad') || {}).value || '').trim() || x.ad;
+    x.aciklama = ((document.getElementById('dm_acik') || {}).value || '').trim();
+    x.seriNo = ((document.getElementById('dm_seri') || {}).value || '').trim();
+    x.alisTarih = ((document.getElementById('dm_alis') || {}).value || '');
+    var f = parseFloat((document.getElementById('dm_fiyat') || {}).value);
+    x.fiyat = isNaN(f) ? null : f;
+    dbSet('demirbaslar', list);
+    toast('Demirbaş güncellendi');
+    state._view = { detail: id };
+    go('demirbaslar');
+  });
+};
+
+window.demSil = function(id) {
+  ymConfirm('Bu demirbaşı silmek istediğinize emin misiniz?<br>Belgeler ve hatırlatmalar da silinir.', {
+    title: 'Demirbaş Sil', okText: 'Evet', cancelText: 'Hayır', danger: true
+  }).then(function(ok) {
+    if (!ok) return;
+    dbSet('demirbaslar', (dbGet('demirbaslar') || []).filter(function(x) { return String(x.id) !== String(id); }));
+    try { pushAct('Demirbaş silindi'); } catch (e) {}
+    toast('Demirbaş silindi');
+    state._view = {};
+    go('demirbaslar');
+  });
+};
+
+window.demHatModal = function(id) {
+  var html =
+    '<div class="field"><label>Başlık</label><input class="input" id="dm_h_baslik" placeholder="Örn. Garanti bitişi, Muayene"></div>' +
+    '<div class="field"><label>Tarih</label><input class="input" id="dm_h_tarih" type="date"></div>' +
+    '<div class="field"><label>Açıklama</label><textarea class="input" id="dm_h_acik" rows="2"></textarea></div>';
+  ymConfirm(html, { title: 'Hatırlatma Tarihi Ekle', okText: 'Kaydet', cancelText: 'Vazgeç' }).then(function(ok) {
+    if (!ok) return;
+    var list = dbGet('demirbaslar') || [];
+    var x = list.find(function(r) { return String(r.id) === String(id); });
+    if (!x) return;
+    var t = ((document.getElementById('dm_h_tarih') || {}).value || '');
+    if (!t) return toast('Tarih seçin');
+    x.hatirlatmalar = x.hatirlatmalar || [];
+    x.hatirlatmalar.push({
+      baslik: ((document.getElementById('dm_h_baslik') || {}).value || '').trim() || 'Hatırlatma',
+      tarih: t,
+      aciklama: ((document.getElementById('dm_h_acik') || {}).value || '').trim()
+    });
+    dbSet('demirbaslar', list);
+    toast('Hatırlatma eklendi');
+    state._view = { detail: id };
+    go('demirbaslar');
+  });
+};
+
+window.demHatSil = function(id, idx) {
+  var list = dbGet('demirbaslar') || [];
+  var x = list.find(function(r) { return String(r.id) === String(id); });
+  if (!x || !x.hatirlatmalar) return;
+  x.hatirlatmalar.splice(idx, 1);
+  dbSet('demirbaslar', list);
+  state._view = { detail: id };
+  go('demirbaslar');
+};
+
+window.demBelgeYukleModal = function(id) {
+  var html =
+    '<div class="card" style="background:#fef9c3;border:1px solid #fde68a;margin-bottom:10px"><div class="card-b" style="color:#854d0e;font-size:12.5px">' +
+    'Uzantısı doc, docx, xls, xlsx, pdf, jpg, gif, png, txt olan dosyaları yükleyebilirsiniz.<br>Dosya boyutu 5MB geçmemelidir.</div></div>' +
+    '<div class="field"><label>Yüklenecek Dosya</label><input type="file" id="dm_belge_file" class="input" accept=".doc,.docx,.xls,.xlsx,.pdf,.jpg,.jpeg,.gif,.png,.txt"></div>' +
+    '<div class="field"><label>Dosya Açıklaması</label><textarea class="input" id="dm_belge_acik" rows="3" placeholder="Dosya açıklaması"></textarea></div>';
+  ymConfirm(html, { title: 'Dosya Yükleme', okText: 'Yükle', cancelText: 'Vazgeç' }).then(function(ok) {
+    if (!ok) return;
+    var fileInput = document.getElementById('dm_belge_file');
+    var file = fileInput && fileInput.files && fileInput.files[0];
+    if (!file) return toast('Dosya seçin');
+    if (file.size > 5 * 1024 * 1024) return toast('Dosya boyutu 5MB geçemez');
+    try { ymShowWait('Lütfen bekleyin...'); } catch (e) {}
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        var list = dbGet('demirbaslar') || [];
+        var x = list.find(function(r) { return String(r.id) === String(id); });
+        if (!x) return;
+        x.belgeler = x.belgeler || [];
+        x.belgeler.push({
+          name: file.name,
+          aciklama: (document.getElementById('dm_belge_acik') || {}).value || '',
+          data: e.target.result,
+          tarih: todayISO(),
+          type: file.type || ''
+        });
+        dbSet('demirbaslar', list);
+        try { pushAct('Demirbaş belgesi yüklendi: ' + file.name); } catch (err) {}
+        state._view = { docs: id };
+        go('demirbaslar');
+        toast('Belge sisteme kaydedildi');
+      } finally {
+        try { ymHideWait(); } catch (e2) {}
+      }
+    };
+    reader.onerror = function() { try { ymHideWait(); } catch (e) {} toast('Dosya okunamadı'); };
+    reader.readAsDataURL(file);
+  });
+};
+
+window.demBelgeIndir = function(id, idx) {
+  var d = demFind(id);
+  if (!d || !d.belgeler || !d.belgeler[idx]) return;
+  var b = d.belgeler[idx];
+  if (!b.data) return toast('Dosya verisi bulunamadı');
+  // Yeni sekmede aç
+  try {
+    var w = window.open('', '_blank');
+    if (w) {
+      if ((b.type || '').indexOf('image/') === 0 || /\.(png|jpe?g|gif|webp)$/i.test(b.name || '')) {
+        w.document.write('<title>' + (b.name || 'belge') + '</title><img src="' + b.data + '" style="max-width:100%;height:auto">');
+      } else if ((b.type || '') === 'application/pdf' || /\.pdf$/i.test(b.name || '')) {
+        w.location = b.data;
+      } else {
+        w.document.write('<title>' + (b.name || 'belge') + '</title><p style="font-family:system-ui;padding:20px">' +
+          esc(b.name || 'belge') + (b.aciklama ? '<br><small>' + esc(b.aciklama) + '</small>' : '') +
+          '</p><p><a download="' + esc(b.name || 'belge') + '" href="' + b.data + '">Dosyayı indir</a></p>');
+      }
+      w.document.close();
+      return;
+    }
+  } catch (e) {}
+  // Fallback: indirme
+  var a = document.createElement('a');
+  a.href = b.data;
+  a.download = b.name || 'belge';
+  a.target = '_blank';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+};
+
+window.demBelgeGuncelle = function(id, idx) {
+  var d = demFind(id);
+  if (!d || !d.belgeler || !d.belgeler[idx]) return;
+  var b = d.belgeler[idx];
+  var html = '<div class="field"><label>Dosya Açıklaması</label><textarea class="input" id="dm_belge_acik2" rows="3">' + esc(b.aciklama || '') + '</textarea></div>';
+  ymConfirm(html, { title: 'Açıklama Güncelleme', okText: 'Güncelle', cancelText: 'Vazgeç' }).then(function(ok) {
+    if (!ok) return;
+    var list = dbGet('demirbaslar') || [];
+    var x = list.find(function(r) { return String(r.id) === String(id); });
+    if (!x || !x.belgeler[idx]) return;
+    x.belgeler[idx].aciklama = (document.getElementById('dm_belge_acik2') || {}).value || '';
+    dbSet('demirbaslar', list);
+    toast('Belge açıklaması güncellendi');
+    state._view = { docs: id };
+    go('demirbaslar');
+  });
+};
+
+window.demBelgeSil = function(id, idx) {
+  ymConfirm('Dikkat! Silinen bir belgeyi geri alamazsınız.<br><br>Silmek istediğinize emin misiniz?', {
+    title: 'Belge Silme Onayı', okText: 'Evet', cancelText: 'Hayır', danger: true
+  }).then(function(ok) {
+    if (!ok) return;
+    var list = dbGet('demirbaslar') || [];
+    var x = list.find(function(r) { return String(r.id) === String(id); });
+    if (!x || !x.belgeler) return;
+    x.belgeler.splice(idx, 1);
+    dbSet('demirbaslar', list);
+    state._view = { docs: id };
+    go('demirbaslar');
+    toast('Belge silindi');
+  });
+};
+
+window.demRapor = function() {
+  var list = dbGet('demirbaslar') || [];
+  if (!list.length) return toast('Kayıtlı demirbaş yok');
+  var rows = [['Demirbaş Adı', 'Seri No', 'Alış Tarihi', 'Fiyat', 'Açıklama', 'Belge Sayısı', 'Hatırlatma']];
+  list.forEach(function(d) {
+    rows.push([
+      d.ad || '',
+      d.seriNo || '',
+      d.alisTarih || '',
+      d.fiyat != null ? d.fiyat : '',
+      d.aciklama || '',
+      (d.belgeler || []).length,
+      (d.hatirlatmalar || []).length
+    ]);
+  });
+  var csv = rows.map(function(r) { return r.map(function(c) { return '"' + String(c).replace(/"/g, '""') + '"'; }).join(';'); }).join('\n');
+  var blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'demirbaslar_rapor.csv';
+  a.click();
+  toast('Rapor indirildi');
 };
 
 window.krediExcel = function(id) {
@@ -13053,75 +13486,335 @@ function wrapMode(pageId, fn) {
   var orig = pages[pageId];
   pages[pageId] = function() { var r = fn(); return r != null ? r : orig(); };
 }
+function cariHesapOpts(pref) {
+  var list = dbGet('hesaplar') || [];
+  var groups = { kasa: [], banka: [], pos: [], ortakt: [], diger: [] };
+  list.forEach(function(h) {
+    var ad = String(h.name || h.ad || '').toLowerCase();
+    var tip = String(h.tur || h.tip || '').toLowerCase();
+    var g = 'diger';
+    if (/kasa/.test(ad) || tip === 'kasa') g = 'kasa';
+    else if (/pos/.test(ad) || tip === 'pos') g = 'pos';
+    else if (/ortak/.test(ad) || tip === 'ortak') g = 'ortakt';
+    else if (/banka|usd|eur|try|tl/.test(ad) || tip === 'banka') g = 'banka';
+    groups[g].push(h);
+  });
+  function opt(h) {
+    var label = (h.name || h.ad || 'Hesap') + ' (' + fmtMoney(h.bakiye || 0) + (h.paraBirimi && h.paraBirimi !== 'TRY' ? ' ' + h.paraBirimi : '') + ')';
+    return '<option value="' + esc(h.id) + '">' + esc(label) + '</option>';
+  }
+  var html = '<option value="">Hesap seçin</option>';
+  if (groups.kasa.length) html += '<optgroup label="Kasa">' + groups.kasa.map(opt).join('') + '</optgroup>';
+  if (groups.banka.length) html += '<optgroup label="Banka">' + groups.banka.map(opt).join('') + '</optgroup>';
+  if (groups.pos.length) html += '<optgroup label="POS">' + groups.pos.map(opt).join('') + '</optgroup>';
+  if (groups.ortakt.length) html += '<optgroup label="Ortaklar">' + groups.ortakt.map(opt).join('') + '</optgroup>';
+  if (groups.diger.length) html += '<optgroup label="Diğer">' + groups.diger.map(opt).join('') + '</optgroup>';
+  return html;
+}
 function cariTahsilModal() {
   var v = state._view, t = v.cariType, key = cariKey(t), c = dbGet(key).find(function(x){ return x.id === v.cariId; });
   if (!c) { state._view = {}; return null; }
-  var geri = 'state._view={detail:\'' + c.id + '\'};go(\'' + key + '\')';
-  var initT = Math.abs(Number(c.bakiye) || 0);
-  var pref = v.yontem || 'Nakit';
-  var yonOpts = ['Nakit','Kredi Kartı','Banka'].map(function(y){
-    return '<option value="'+y+'"'+(y===pref?' selected':'')+'>'+y+'</option>';
-  }).join('');
-  return '<div class="modal-bg"><div class="modal"><div class="modal-h">' + (t === 'musteri' ? 'Tahsilat / Ödeme' : 'Ödeme / Tahsilat') + ' — ' + esc(c.unvan) + '<button type="button" onclick="' + geri + '">X</button></div><div class="modal-b">' +
-    '<div class="field"><label>İşlem</label><select id="ct_tip">' +
-    (t === 'musteri' ? '<option value="tahsilat">Tahsilat (müşteriden alınan)</option><option value="odeme">Ödeme / iade (müşteriye verilen)</option>'
-      : '<option value="odeme">Ödeme (tedarikçiye yapılan)</option><option value="tahsilat">Tahsilat (tedarikçiden alınan)</option>') + '</select></div>' +
-    '<div class="field"><label>Yöntem</label><select id="ct_yon">'+yonOpts+'</select></div>' +
-    '<div class="field"><label>Tutar</label><input id="ct_tutar" type="number" step="0.01" value="' + initT + '" oninput="var el=document.getElementById(\'ct_yazi\');if(el)el.textContent=typeof amountToWords===\'function\'?amountToWords(this.value):\'\'"></div>' +
-    '<div class="field"><label>Yazıyla</label><div id="ct_yazi" style="font-size:13px;color:#0f766e;font-weight:600;padding:6px 0">' + (typeof amountToWords==='function'?amountToWords(initT):'') + '</div></div>' +
-    '<div class="field"><label>Tarih</label><input id="ct_tarih" type="date" value="' + todayISO() + '"></div></div>' +
-    '<div class="modal-f"><button class="btn btn-ghost" onclick="' + geri + '">Vazgeç</button><button class="btn btn-lime" onclick="cariTahsilKaydet()">Kaydet</button></div></div></div>';
+  var bal = Number(c.bakiye) || 0;
+  var isM = t === 'musteri';
+  var tipOpts = isM
+    ? '<option value="tahsilat">Müşteriden Tahsilat</option><option value="odeme">Müşteriye Ödeme</option>'
+    : '<option value="odeme">Tedarikçiye Ödeme</option><option value="tahsilat">Tedarikçiden Tahsilat</option>';
+  return '<div class="toolbar" style="display:flex;gap:8px;margin-bottom:12px">' +
+    '<button type="button" class="btn btn-lime" onclick="cariTahsilKaydet()">Kaydet</button>' +
+    '<button type="button" class="btn" style="background:#38bdf8;color:#fff;border:0" onclick="state._view={detail:\'' + c.id + '\'};go(\'' + key + '\')">' + (isM ? 'Müşteri Sayfası' : 'Tedarikçi Sayfası') + '</button>' +
+    '</div>' +
+    '<div style="display:grid;grid-template-columns:1.2fr .8fr;gap:14px;align-items:start">' +
+    '<div class="card" style="overflow:hidden">' +
+    '<div style="background:#0369a1;color:#fff;padding:12px 16px;font-weight:700">GİRİŞ</div>' +
+    '<div class="card-b">' +
+    '<div class="field"><label style="color:#dc2626">İşlem</label><select class="input" id="ct_tip" onchange="cariTahsilTipUyari()">' + tipOpts + '</select></div>' +
+    '<div class="field"><label>Tarih</label><input class="input" id="ct_tarih" type="date" value="' + todayISO() + '"></div>' +
+    '<div class="field"><label>Açıklama</label><textarea class="input" id="ct_acik" rows="2" placeholder="isteğe bağlı..."></textarea></div>' +
+    '<div class="field"><label>Kasa/Hesap</label><select class="input" id="ct_hesap" onchange="cariTahsilHesapDegisti()">' + cariHesapOpts() + '</select></div>' +
+    '<div class="field"><label>Tutar (TL)</label><input class="input" id="ct_tutar" type="number" step="0.01" value="" ' +
+    'oninput="var el=document.getElementById(\'ct_yazi\');if(el)el.textContent=typeof amountToWords===\'function\'?amountToWords(this.value):\'\'">' +
+    '<div id="ct_yazi" style="font-size:12px;color:#64748b;margin-top:4px"># #</div></div>' +
+    '</div></div>' +
+    '<div class="card" style="overflow:hidden">' +
+    '<div style="background:#16a34a;color:#fff;padding:12px 16px;font-weight:700">' + esc(c.unvan || c.ad || '') + '</div>' +
+    '<div class="card-b" style="font-size:14px;line-height:1.9">' +
+    '<div style="display:flex;justify-content:space-between;gap:8px"><span style="color:#64748b">Açık Hesap Bakiyesi</span>' +
+    '<span>' + fmtMoney(Math.abs(bal)) + ' <a href="#" class="link" onclick="event.preventDefault();cariTahsilEkleBakiye()">ekle</a></span></div>' +
+    '<div style="display:flex;justify-content:space-between;gap:8px"><span style="color:#64748b">Banka Bilgileri</span><span style="color:#94a3b8">' + esc(c.banka || 'kayıtlı değil') + '</span></div>' +
+    '</div></div></div>';
 }
 wrapMode('satislar', function(){ return state._view.mode === 'tahsil' && state._view.cariId ? cariTahsilModal() : null; });
 wrapMode('alislar',  function(){ return state._view.mode === 'tahsil' && state._view.cariId ? cariTahsilModal() : null; });
 wrapMode('musteriler', function(){ return state._view.mode === 'tahsil' && state._view.cariId ? cariTahsilModal() : null; });
 wrapMode('tedarikciler', function(){ return state._view.mode === 'tahsil' && state._view.cariId ? cariTahsilModal() : null; });
+
+window.cariTahsilEkleBakiye = function() {
+  var v = state._view; if (!v || !v.cariId) return;
+  var c = dbGet(cariKey(v.cariType)).find(function(x){ return x.id === v.cariId; });
+  if (!c) return;
+  var inp = document.getElementById('ct_tutar');
+  if (inp) {
+    inp.value = Math.abs(Number(c.bakiye) || 0).toFixed(2);
+    var el = document.getElementById('ct_yazi');
+    if (el) el.textContent = typeof amountToWords === 'function' ? amountToWords(inp.value) : '';
+  }
+};
+window.cariTahsilTipUyari = function() {
+  var tip = (document.getElementById('ct_tip') || {}).value || '';
+  var v = state._view || {};
+  if (!v.cariId || !v.cariType) return;
+  var c = (dbGet(cariKey(v.cariType)) || []).find(function(x){ return String(x.id) === String(v.cariId); });
+  if (!c) return;
+  var bal = Number(c.bakiye) || 0;
+  var isM = v.cariType === 'musteri';
+  var msg = '';
+
+  // Müşteri: +bakiye = borçlu (bize borçlu), -bakiye = alacaklı (biz borçluyuz)
+  // Tedarikçi: -bakiye = alacaklı (biz borçluyuz), +bakiye = borçlu (bize borçlu)
+  // tahsilat → bakiye −, ödeme → bakiye +
+
+  if (isM) {
+    if (tip === 'tahsilat') {
+      if (bal > 0) msg = 'Müşteri borçlu. Bu tahsilat açık bakiyeden düşülecek.';
+      else if (bal < 0) msg = 'Müşteri şu an alacaklı (siz borçlusunuz). Tahsilat alırsanız bakiyesi ters yönde artar.';
+      else msg = 'Açık bakiye 0. Tahsilat kaydı bakiyeyi alacaklı yönde değiştirebilir.';
+    } else if (tip === 'odeme') {
+      if (bal > 0) msg = 'Müşteri hâlâ borçlu. Müşteriye ödeme yaparsanız bakiyesi artar — müşteri size daha fazla borçlanır.';
+      else if (bal < 0) msg = 'Müşteri alacaklı (siz borçlusunuz). Bu ödeme açık bakiyeden düşülecek.';
+      else msg = 'Seçtiğiniz işlem tipi ile müşteri size borçlanacak!';
+    }
+  } else {
+    if (tip === 'odeme') {
+      if (bal < 0) msg = 'Tedarikçi alacaklı (siz borçlusunuz). Bu ödeme açık bakiyeden düşülecek.';
+      else if (bal > 0) msg = 'Tedarikçi şu an borçlu (size borçlu). Ödeme yaparsanız bakiyesi ters yönde artar.';
+      else msg = 'Açık bakiye 0. Ödeme kaydı tedarikçiyi alacaklı (sizi borçlu) yapar.';
+    } else if (tip === 'tahsilat') {
+      if (bal > 0) msg = 'Tedarikçi borçlu. Bu tahsilat açık bakiyeden düşülecek.';
+      else msg = 'Seçtiğiniz işlem tipi ile tedarikçi size borçlanacak!';
+    }
+  }
+  if (msg) ymAlert(msg, 'Hatırlatma');
+};
+window.cariTahsilHesapDegisti = function() {
+  /* hesap seçimine göre ödeme şekli etiketi otomatik */
+};
 window.cariTahsilKaydet = function() {
-  var v = state._view, tutar = parseFloat(document.getElementById('ct_tutar').value) || 0;
+  var v = state._view, tutar = parseFloat((document.getElementById('ct_tutar') || {}).value) || 0;
   if (tutar <= 0) return toast('Tutar girin');
-  var tip = document.getElementById('ct_tip').value, yon = document.getElementById('ct_yon').value;
-  var o = dbGet('odemeler');
-  o.push({ id: uid('o'), cariId: v.cariId, cariType: v.cariType, tip: tip, yontem: yon, tutar: tutar, tarih: document.getElementById('ct_tarih').value || todayISO(), created: new Date().toISOString() });
+  var tip = (document.getElementById('ct_tip') || {}).value || 'tahsilat';
+  var hesapId = (document.getElementById('ct_hesap') || {}).value || '';
+  if (!hesapId) return toast('Kasa/Hesap seçin');
+  var hesaplar = dbGet('hesaplar') || [];
+  var hesap = hesaplar.find(function(h){ return String(h.id) === String(hesapId); });
+  var yon = 'Nakit';
+  if (hesap) {
+    var ad = String(hesap.name || hesap.ad || '').toLowerCase();
+    var tp = String(hesap.tur || hesap.tip || '').toLowerCase();
+    if (/banka|havale|eft|usd|eur/.test(ad) || tp === 'banka') yon = 'Banka';
+    else if (/pos|kart|kredi/.test(ad) || tp === 'pos') yon = 'Kredi Kartı';
+    else yon = 'Nakit';
+  }
+  var acik = ((document.getElementById('ct_acik') || {}).value || '').trim();
+  var tarih = (document.getElementById('ct_tarih') || {}).value || todayISO();
+  var o = dbGet('odemeler') || [];
+  o.push({
+    id: uid('o'), cariId: v.cariId, cariType: v.cariType, tip: tip, yontem: yon,
+    hesapId: hesapId, hesapAd: hesap ? (hesap.name || hesap.ad) : '',
+    tutar: tutar, aciklama: acik, tarih: tarih, created: new Date().toISOString()
+  });
   dbSet('odemeler', o);
   bakiyeEkle(v.cariType, v.cariId, tip === 'tahsilat' ? -tutar : tutar);
-  pushAct(fmtMoney(tutar) + ' ' + yon + ' ' + (tip === 'tahsilat' ? 'tahsilat' : 'ödeme') + ' kaydedildi');
-  toast('Kaydedildi'); state._view = { detail: v.cariId }; go(cariKey(v.cariType));
+  if (hesap) {
+    var delta = tip === 'tahsilat' ? tutar : -tutar;
+    hesap.bakiye = (Number(hesap.bakiye) || 0) + delta;
+    dbSet('hesaplar', hesaplar);
+  }
+  try { pushAct(fmtMoney(tutar) + ' ' + yon + ' ' + (tip === 'tahsilat' ? 'tahsilat' : 'ödeme') + ' — ' + ((dbGet(cariKey(v.cariType)).find(function(x){return x.id===v.cariId;})||{}).unvan || '')); } catch(e) {}
+  ymAlert('Ödeme bilgisi kaydedildi.', 'Başarılı').then(function(){
+    state._view = { detail: v.cariId }; go(cariKey(v.cariType));
+  });
 };
 window.cariBakiyeDuzelt = function(id, t) {
   var c = dbGet(cariKey(t)).find(function(x){ return x.id === id; }); if (!c) return;
-  openModal('Bakiye Düzelt', '<p style="font-size:13px;color:var(--muted);margin-bottom:10px;">Pozitif değer: ' + (t === 'musteri' ? 'müşteri borçlu' : 'tedarikçi alacaklı') + ', negatif değer: karşı yön.</p>' +
-    '<div class="field"><label>Yeni bakiye (TL)</label><input id="bd_yeni" type="number" step="0.01" value="' + (Number(c.bakiye) || 0) + '"></div>',
-    '<button class="btn btn-ghost" onclick="closeModal()">Vazgeç</button><button class="btn btn-lime" onclick="cariBakiyeDuzeltKaydet(\'' + id + '\',\'' + t + '\')">Kaydet</button>');
+  var html =
+    '<div class="field"><label>Güncel Bakiye (TL)</label><input class="input" id="bd_yeni" type="number" step="0.01" value="' + (Number(c.bakiye) || 0) + '"></div>' +
+    '<div class="field"><label>Açıklama</label><textarea class="input" id="bd_acik" rows="2" placeholder=""></textarea></div>' +
+    '<p style="font-size:12px;color:#64748b;margin:8px 0 0">Pozitif: ' + (t==='musteri'?'müşteri borçlu':'biz alacaklı') + '. Negatif girilirse ' + (t==='musteri'?'müşteriye borçlanırsınız':'ters yön') + '.</p>';
+  ymConfirm(html, { title: 'Bakiye Değiştirme', okText: 'Kaydet', cancelText: 'Vazgeç', danger: false }).then(function(ok) {
+    if (!ok) return;
+    cariBakiyeDuzeltKaydet(id, t);
+  });
 };
 window.cariBakiyeDuzeltKaydet = function(id, t) {
-  var yeni = parseFloat(document.getElementById('bd_yeni').value); if (isNaN(yeni)) return toast('Tutar girin');
-  var c = dbGet(cariKey(t)).find(function(x){ return x.id === id; }), delta = yeni - (Number(c.bakiye) || 0);
-  var d = dbGet('duzeltmeler'); d.push({ id: uid('d'), cariId: id, delta: delta, tarih: todayISO() }); dbSet('duzeltmeler', d);
-  bakiyeEkle(t, id, delta); pushAct('Bakiye düzeltildi: ' + c.unvan);
-  closeModal(); toast('Bakiye güncellendi'); state._view = { detail: id }; go(cariKey(t));
+  var yeni = parseFloat((document.getElementById('bd_yeni') || {}).value);
+  if (isNaN(yeni)) return toast('Tutar girin');
+  var acik = ((document.getElementById('bd_acik') || {}).value || '').trim();
+  var c = dbGet(cariKey(t)).find(function(x){ return x.id === id; });
+  if (!c) return;
+  var delta = yeni - (Number(c.bakiye) || 0);
+  var d = dbGet('duzeltmeler') || [];
+  d.push({ id: uid('d'), cariId: id, delta: delta, aciklama: acik, tarih: todayISO() });
+  dbSet('duzeltmeler', d);
+  bakiyeEkle(t, id, delta);
+  try { pushAct('Bakiye düzeltildi: ' + (c.unvan || c.ad || '')); } catch(e) {}
+  toast('Bakiye güncellendi');
+  state._view = { detail: id }; go(cariKey(t));
 };
-window.cariEkstre = function(id, t, mod) { state._view = { ekstre: id, tip: t, mod: mod }; go(cariKey(t)); };
+window.cariOrtalamaVade = function(id, type) {
+  var list = dbGet(type === 'musteri' ? 'satislar' : 'alislar') || [];
+  var today = todayISO();
+  var days = [], sum = 0, n = 0;
+  list.forEach(function(s) {
+    if (String(s.musteriId || s.tedarikciId || s.cariId) !== String(id)) return;
+    if (s.durum === 'iptal' || s.odendi) return;
+    var v = String(s.vade || s.tarih || '').slice(0, 10);
+    if (!v) return;
+    var gun = Math.round((new Date(v) - new Date(s.tarih || v)) / 86400000);
+    if (isNaN(gun)) gun = 0;
+    sum += gun; n++;
+  });
+  var ort = n ? Math.round(sum / n) : 0;
+  ymAlert('Bu cari için ortalama vade ' + ort + ' gündür. (' + fmtDate(today) + ')', 'Ortalama Vade');
+};
+window.cariAlisSec = function(id) {
+  var html =
+    '<div style="background:#fef9c3;border:1px solid #fde68a;padding:12px;border-radius:8px;color:#854d0e;font-size:13px;line-height:1.55;margin-bottom:14px">' +
+    'Ne tür bir alış işlemi kaydedeceğinizi seçin.<br>' +
+    '<strong>Normal</strong> veya <strong>satıştan iade</strong> şeklinde alış seçebilirsiniz. Her iki durumda da müşterinize alacak yazar ve stoklu ürünlerde stoklarınız artar.<br><br>' +
+    'Normal alış seçtiğinizde ürün kartındaki alış fiyatını getiririz, iade şeklinde alış seçerseniz ürün kartındaki satış fiyatını getiririz.' +
+    '</div>' +
+    '<label style="display:flex;align-items:center;gap:8px;margin:8px 0;cursor:pointer"><input type="radio" name="alisTur" value="normal" checked> Normal Alış</label>' +
+    '<label style="display:flex;align-items:center;gap:8px;margin:8px 0;cursor:pointer"><input type="radio" name="alisTur" value="iade"> Satıştan İade Alışı</label>';
+  ymConfirm(html, { title: 'Alış Türü Seçin', okText: 'Devam', cancelText: 'Vazgeç', danger: false }).then(function(ok) {
+    if (!ok) return;
+    var tur = 'normal';
+    try {
+      var r = document.querySelector('input[name="alisTur"]:checked');
+      if (r) tur = r.value;
+    } catch (e) {}
+    if (tur === 'iade') {
+      state._view = { mode: 'belge', cariId: id, alisIade: true, musteriId: id };
+      go('alislar');
+      toast('Satıştan iade: yalnızca bu müşteriye satılmış ürünler iade edilebilir');
+    } else {
+      ymConfirm('Normal alış kaydı mevcut cari bakiyesinden mi düşsün, yoksa yeni borç olarak mı yansısın?', {
+        title: 'Alış Yansıtma',
+        okText: 'Mevcut bakiyeden düş',
+        cancelText: 'Yeni borç (Alıştan Borç)',
+        danger: false
+      }).then(function(fromBal) {
+        state._view = { mode: 'belge', cariId: id, alisNormal: true, alisBakiyeDus: !!fromBal };
+        go('alislar');
+      });
+    }
+  });
+};
+window.cariEkstre = function(id, t, mod) { state._view = { ekstre: id, tip: t, mod: mod || 0 }; go(cariKey(t)); };
+window.openCariEkstre = function(id, t) { cariEkstre(id, t, 0); };
 function ekstreHTML() {
   var v = state._view, t = v.tip, key = cariKey(t), c = dbGet(key).find(function(x){ return x.id === v.ekstre; });
   if (!c) { state._view = {}; return null; }
+  var detayli = Number(v.mod) === 1;
   var E = [];
   dbGet(t === 'musteri' ? 'satislar' : 'alislar').forEach(function(s) {
-    if ((t === 'musteri' ? s.musteriId : s.tedarikciId) !== c.id) return;
-    var det = (v.mod === 1 && s.kalemler) ? '<br><small style="color:#64748b;">' + s.kalemler.map(function(l){ return esc(l.ad) + ' ' + l.miktar + ' x ' + fmtMoney(l.fiyat); }).join('; ') + '</small>' : '';
-    E.push({ d: s.tarih || s.created, a: (t === 'musteri' ? 'Satış ' : 'Alış ') + esc(s.no) + det, x: t === 'musteri' ? s.tutar : -s.tutar });
-    if (t === 'musteri' && Number(s.tahsil) > 0) E.push({ d: s.tarih || s.created, a: 'Satışta tahsilat ' + esc(s.no), x: -s.tahsil });
+    if (String(t === 'musteri' ? s.musteriId : s.tedarikciId) !== String(c.id) && String(s.cariId) !== String(c.id)) return;
+    if (s.durum === 'iptal') return;
+    var borc = t === 'musteri' ? (Number(s.tutar) || 0) : 0;
+    var alacak = t === 'musteri' ? 0 : (Number(s.tutar) || 0);
+    if (t !== 'musteri') { borc = Number(s.tutar) || 0; alacak = 0; }
+    E.push({
+      d: s.tarih || s.created, vade: s.vade || s.tarih,
+      hareket: t === 'musteri' ? 'Satış' : 'Alış',
+      acik: s.aciklama || s.no || '',
+      odeme: '', borc: borc, alacak: alacak,
+      kalemler: s.kalemler || []
+    });
+    if (t === 'musteri' && Number(s.tahsil) > 0) {
+      E.push({ d: s.tarih || s.created, vade: s.vade || s.tarih, hareket: 'Tahsilat', acik: '', odeme: 'Nakit', borc: 0, alacak: Number(s.tahsil) || 0, kalemler: [] });
+    }
   });
-  dbGet('odemeler').forEach(function(o){ if (o.cariId === c.id) E.push({ d: o.tarih, a: (o.tip === 'tahsilat' ? 'Tahsilat' : 'Ödeme') + ' (' + esc(o.yontem) + ')', x: o.tip === 'tahsilat' ? -o.tutar : o.tutar }); });
-  dbGet('duzeltmeler').forEach(function(o){ if (o.cariId === c.id) E.push({ d: o.tarih, a: 'Bakiye düzeltme', x: o.delta }); });
+  (dbGet('odemeler') || []).forEach(function(o) {
+    if (String(o.cariId) !== String(c.id)) return;
+    var isTah = o.tip === 'tahsilat';
+    E.push({
+      d: o.tarih, vade: o.tarih,
+      hareket: isTah ? 'Tahsilat' : 'Ödeme',
+      acik: o.aciklama || '',
+      odeme: o.yontem || o.hesapAd || '',
+      borc: isTah ? 0 : (Number(o.tutar) || 0),
+      alacak: isTah ? (Number(o.tutar) || 0) : 0,
+      kalemler: []
+    });
+  });
+  (dbGet('duzeltmeler') || []).forEach(function(o) {
+    if (String(o.cariId) !== String(c.id)) return;
+    var dlt = Number(o.delta) || 0;
+    E.push({
+      d: o.tarih, vade: o.tarih,
+      hareket: dlt >= 0 ? 'Borç Fişi' : 'Alacak Fişi',
+      acik: o.aciklama || 'Bakiye düzeltme',
+      odeme: '', borc: dlt > 0 ? dlt : 0, alacak: dlt < 0 ? -dlt : 0, kalemler: []
+    });
+  });
   E.sort(function(a, b){ return String(a.d).localeCompare(String(b.d)); });
-  var run = 0, rows = E.map(function(e){ run += Number(e.x) || 0; return [fmtDate(e.d), e.a, fmtMoney(e.x), fmtMoney(run)]; });
-  var baslik = v.mod === 2 ? 'Mutabakat Mektubu' : (v.mod === 1 ? 'Detaylı Ekstre' : 'Hesap Ekstresi');
-  var yon = run > 0 ? (t === 'musteri' ? 'borçlusunuz' : 'alacaklıyız') : run < 0 ? (t === 'musteri' ? 'alacaklısınız' : 'borçluyuz') : 'bakiye bulunmamaktadır';
-  var mektup = v.mod === 2 ? '<div class="card" style="margin-bottom:12px;"><div class="card-b"><p>Sayın <strong>' + esc(c.unvan) + '</strong>,</p><p style="margin:8px 0;">' + fmtDate(todayISO()) + ' tarihi itibarıyla kayıtlarımıza göre ' + fmtMoney(Math.abs(run)) + ' tutarında ' + yon + '. Mutabık olduğunuzu onaylamanızı rica ederiz.</p><p>Mutabıkız ☐ &nbsp; Mutabık Değiliz ☐ &nbsp; Kaşe / İmza: ________</p></div></div>' : '';
-  return '<div class="toolbar"><button class="btn btn-ghost" onclick="state._view={detail:\'' + c.id + '\'};go(\'' + key + '\')">Geri</button><button class="btn btn-lime" onclick="window.print()">Yazdır</button></div>' +
-    '<h3 style="margin:6px 0 10px;">' + baslik + ' — ' + esc(c.unvan) + '</h3>' + mektup +
-    '<div class="card">' + tableHTML(['Tarih', 'Açıklama', 'Hareket', 'Bakiye'], rows) + '</div>';
+  var run = 0, topBorc = 0, topAlacak = 0;
+  var bodyRows = '';
+  E.forEach(function(e) {
+    topBorc += Number(e.borc) || 0;
+    topAlacak += Number(e.alacak) || 0;
+    run += (Number(e.borc) || 0) - (Number(e.alacak) || 0);
+    bodyRows += '<tr>' +
+      '<td>' + esc(fmtDate(e.d)) + '</td>' +
+      '<td>' + esc(fmtDate(e.vade)) + '</td>' +
+      '<td>' + esc(e.hareket) + '</td>' +
+      (detayli ? '<td></td>' : '') +
+      '<td>' + esc(e.acik) + '</td>' +
+      (detayli ? '<td></td><td></td><td></td>' : '') +
+      '<td>' + esc(e.odeme) + '</td>' +
+      '<td style="text-align:right">' + (e.borc ? Number(e.borc).toFixed(2) : '') + '</td>' +
+      '<td style="text-align:right">' + (e.alacak ? Number(e.alacak).toFixed(2) : '') + '</td>' +
+      '<td style="text-align:right">' + fmtMoney(run) + '</td></tr>';
+    if (detayli && e.kalemler && e.kalemler.length) {
+      e.kalemler.forEach(function(l) {
+        bodyRows += '<tr style="background:#fffbeb">' +
+          '<td></td><td></td><td></td><td></td>' +
+          '<td>' + esc(l.ad || l.urun || '') + '</td>' +
+          '<td>' + esc(String(l.miktar || '') + ' ' + (l.birim || 'Ad')) + '</td>' +
+          '<td></td>' +
+          '<td style="text-align:right">' + (l.fiyat != null ? Number(l.fiyat).toFixed(2) : '') + '</td>' +
+          '<td style="text-align:right">' + (l.tutar != null ? Number(l.tutar).toFixed(2) : '') + '</td>' +
+          '<td></td><td></td></tr>';
+      });
+    }
+  });
+  bodyRows += '<tr style="font-weight:700;background:#f8fafc"><td colspan="' + (detayli ? 8 : 5) + '"></td>' +
+    '<td style="text-align:right">' + topBorc.toFixed(2) + '</td>' +
+    '<td style="text-align:right">' + topAlacak.toFixed(2) + '</td>' +
+    '<td style="text-align:right">' + fmtMoney(run) + '</td></tr>';
+  var baslik = detayli ? 'DETAYLI HESAP EKSTRESİ' : 'HESAP EKSTRESİ';
+  return '<div class="toolbar" style="margin-bottom:12px"><button type="button" class="btn" style="background:#f59e0b;color:#fff;border:0" onclick="state._view={detail:\'' + c.id + '\'};go(\'' + key + '\')">Geri Dön</button></div>' +
+    '<div class="card" style="overflow:hidden">' +
+    '<div style="background:#0369a1;color:#fff;padding:12px 16px;font-weight:700">' + esc((c.unvan || c.ad || '').toUpperCase()) + ' ' + baslik + '</div>' +
+    '<div class="card-b">' +
+    '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px">' +
+    '<div style="background:#fecaca;border-radius:10px;padding:14px"><div style="font-size:12px;color:#7f1d1d">Toplam Borç</div><div style="font-size:20px;font-weight:700;color:#991b1b">' + topBorc.toLocaleString('tr-TR',{minimumFractionDigits:2}) + '</div></div>' +
+    '<div style="background:#bae6fd;border-radius:10px;padding:14px"><div style="font-size:12px;color:#0c4a6e">Toplam Alacak</div><div style="font-size:20px;font-weight:700;color:#075985">' + topAlacak.toLocaleString('tr-TR',{minimumFractionDigits:2}) + '</div></div>' +
+    '<div style="background:#bbf7d0;border-radius:10px;padding:14px"><div style="font-size:12px;color:#14532d">Bakiye</div><div style="font-size:20px;font-weight:700;color:#166534">' + run.toLocaleString('tr-TR',{minimumFractionDigits:2}) + '</div></div>' +
+    '</div>' +
+    '<div style="margin-bottom:10px;display:flex;gap:8px">' +
+    '<button type="button" class="btn btn-lime" onclick="cariEkstreExcel()">Excel</button>' +
+    '<button type="button" class="btn" style="background:#f59e0b;color:#fff;border:0" onclick="window.print()">PDF</button>' +
+    '</div>' +
+    '<div style="overflow:auto"><table class="data"><thead><tr>' +
+    '<th>Tarih</th><th>Vade</th><th>Hareket</th>' + (detayli ? '<th>Belge No</th>' : '') +
+    '<th>Açıklama</th>' + (detayli ? '<th>Miktar</th><th>Ödeme</th><th>Fiyat</th>' : '<th>Ödeme</th>') +
+    '<th>Borç</th><th>Alacak</th><th>Bakiye</th></tr></thead><tbody>' + bodyRows + '</tbody></table></div>' +
+    '</div></div>';
 }
+window.cariEkstreExcel = function() {
+  toast('Excel hazırlanıyor…');
+  try { window.print(); } catch (e) {}
+};
 wrapMode('musteriler',   function(){ return state._view.ekstre ? ekstreHTML() : null; });
 wrapMode('tedarikciler', function(){ return state._view.ekstre ? ekstreHTML() : null; });
 
@@ -13958,7 +14651,7 @@ pages.home = function() {
 };
 
 /* ========== SAYFA LİNKLERİ (yönlendirme) ========== */
-var ROUTES = { home:'dashboard', musteriler:'musteriler-cari-menusu', tedarikciler:'tedarikciler-cari-menusu', urunler:'urun-listesi', depolar:'depolar', varyantlar:'varyantlar', kategoriler:'kategoriler', stok:'stok-ekstresi', ozelfiyat:'ozel-fiyat-listesi', satislar:'satislar', alislar:'alislar', fatura:'fatura-belgesi', gelenFaturalar:'gelen-faturalar', gelenEfaturalar:'gelen-e-faturalar', olusturulanEfaturalar:'olusturulan-e-faturalar', arsivlenenFaturalar:'arsivlenen-faturalar', efatura:'e-fatura', efaturaKayit:'e-fatura-kaydi', 'fatura-ayar':'yanmuhasebe-fatura', 'irsaliye-ayar':'irsaliye-ayarlari', hesaplar:'hesaplarim', calisanlar:'calisanlar', masraflar:'masraflar', kredi:'krediler', raporlar:'raporlar', raporFinansal:'finansal-raporlar', raporStok:'stok-raporlari', raporMusteri:'musteri-listesi-rapor', ayarlar:'ayarlar-genel', profilim:'profilim', kullanicilar:'kullanicilar', tanimlar:'tanimlar', etiket:'etiket-sablonlari', destek:'yardim-destek', yanmali:'yanmali', yantedarikci:'yantedarikci', yevmiye:'yevmiye-defteri', kebir:'defteri-kebir', mizan:'genel-mizan', bilanco:'bilanco', gelirtablosu:'gelir-tablosu', hesapplani:'hesap-plani' };
+var ROUTES = { home:'dashboard', musteriler:'musteriler-cari-menusu', tedarikciler:'tedarikciler-cari-menusu', urunler:'urun-listesi', depolar:'depolar', varyantlar:'varyantlar', kategoriler:'kategoriler', stok:'stok-ekstresi', ozelfiyat:'ozel-fiyat-listesi', satislar:'satislar', alislar:'alislar', fatura:'fatura-belgesi', gelenFaturalar:'gelen-faturalar', gelenEfaturalar:'gelen-e-faturalar', olusturulanEfaturalar:'olusturulan-e-faturalar', arsivlenenFaturalar:'arsivlenen-faturalar', efatura:'e-fatura', efaturaKayit:'e-fatura-kaydi', 'fatura-ayar':'yanmuhasebe-fatura', 'irsaliye-ayar':'irsaliye-ayarlari', hesaplar:'hesaplarim', calisanlar:'calisanlar', masraflar:'masraflar', kredi:'krediler', demirbaslar:'demirbaslar', raporlar:'raporlar', raporFinansal:'finansal-raporlar', raporStok:'stok-raporlari', raporMusteri:'musteri-listesi-rapor', ayarlar:'ayarlar-genel', profilim:'profilim', kullanicilar:'kullanicilar', tanimlar:'tanimlar', etiket:'etiket-sablonlari', destek:'yardim-destek', yanmali:'yanmali', yantedarikci:'yantedarikci', yevmiye:'yevmiye-defteri', kebir:'defteri-kebir', mizan:'genel-mizan', bilanco:'bilanco', gelirtablosu:'gelir-tablosu', hesapplani:'hesap-plani' };
 var LANDS = { destek:'destek', ozellikler:'ozellikler', fiyatlar:'fiyatlar', bizkimiz:'biz-kimiz', duyurular:'duyurular', kosullar:'kullanim-kosullari', malimusavir:'mali-musavir' };
 var AUTHS = { 'giris-yap':'login', 'kayit-ol':'register', 'sifremi-unuttum':'forgot' };
 var SLUGS = {};
@@ -15884,6 +16577,7 @@ NAV.length=0;
    {id:'calisanlar',label:'Çalışanlar'},
    {id:'masraflar',label:'Masraflar'},
    {id:'kredi',label:'Krediler'},
+   {id:'demirbaslar',label:'Demirbaşlar'},
    {id:'gelenEfaturalar',label:'Gelen E-Faturalar'},
    {id:'olusturulanEfaturalar',label:'Oluşturulan E-Faturalar'},
    {id:'arsivlenenFaturalar',label:'Arşivlenen Faturalar'},
@@ -15896,7 +16590,7 @@ NAV.length=0;
  {id:'fihrist',label:'Fihrist',icon:'phone'},
  {id:'kilit',label:'Ekran Kilidi',icon:'key'}
 ].forEach(function(x){NAV.push(x)});
-Object.assign(TITLES,{teklifler:'Teklifler',fihrist:'Fihrist',kilit:'Ekran Kilidi',gelenEfaturalar:'Gelen E-Faturalar',olusturulanEfaturalar:'Oluşturulan E-Faturalar',arsivlenenFaturalar:'Arşivlenen Faturalar',efaturaKayit:'E-Fatura Kaydı',gelenFaturalar:'Gelen E-Faturalar'});
+Object.assign(TITLES,{teklifler:'Teklifler',fihrist:'Fihrist',kilit:'Ekran Kilidi',demirbaslar:'Demirbaşlar',gelenEfaturalar:'Gelen E-Faturalar',olusturulanEfaturalar:'Oluşturulan E-Faturalar',arsivlenenFaturalar:'Arşivlenen Faturalar',efaturaKayit:'E-Fatura Kaydı',gelenFaturalar:'Gelen E-Faturalar'});
 Y.buildNav();
 /* Üst çubuk: tarih rozeti, menü düğmesi, alt bilgi */
 var tr=document.querySelector('.topbar-right');
