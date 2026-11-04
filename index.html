@@ -702,6 +702,8 @@ table.data a.link { color: #1e3a5f; font-weight: 700; }
   font-family: inherit; outline: none; box-sizing: border-box;
 }
 .destek-in::placeholder { color: #c4a99a; }
+.destek-note { margin: -4px 4px 12px; font-size: 12px; font-weight: 700; color: #b91c1c; line-height: 1.4; }
+.destek-in.destek-err { outline: 2px solid #ef4444; }
 .destek-ta {
   width: 100%; border: none; border-radius: 12px; background: #fde8e0;
   color: #0f172a; padding: 14px 16px; font-size: 14px; min-height: 140px;
@@ -4207,6 +4209,8 @@ var LAND_PAGES = {
     '<p class="destek-desc">Bize Yazarak Tüm Soru Veya Sorunlarınızı Yanıtlayalım. İster <a href="mailto:yanmuhasebe@gmail.com">yanmuhasebe@gmail.com</a> Adresine İster Bu Formu Doldurarak Sorununuzu Veya Sorunuzu Yanıtlayalım.</p>' +
     '<input class="destek-in" id="destekKonu" type="text" placeholder="Konu Başlığı">' +
     '<input class="destek-in" id="destekEmail" type="email" placeholder="E-posta adresiniz">' +
+    '<input class="destek-in" id="destekTelefon" type="tel" inputmode="tel" autocomplete="tel" placeholder="Telefon numaranız *" required>' +
+    '<div class="destek-note">Bu Alan Sizinle İletişime Geçebilmek İçin Zorunludur.</div>' +
     '<textarea class="destek-ta" id="destekMesaj" placeholder="size daha hızlı yardımcı olabilmemiz için mümkün olduğu kadar detaylı yazmanızı, gerekirse ekran resmini eklemenizi rica ediyoruz."></textarea>' +
     '<div class="destek-actions">' +
     '<label class="destek-file"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg> Dosya Ekle<input type="file" id="destekDosya" onchange="destekDosyaSecildi(this)"></label>' +
@@ -4237,6 +4241,8 @@ window.openLandSection = function(id) {
     try {
       var em = document.getElementById('destekEmail');
       if (em && state.user && state.user.email) em.value = state.user.email;
+      var tl = document.getElementById('destekTelefon');
+      if (tl && state.user && (state.user.phone || state.user.telefon)) tl.value = state.user.phone || state.user.telefon;
     } catch (e) {}
   }
 };
@@ -4258,9 +4264,19 @@ window.destekGonder = function() {
   var konu = (document.getElementById('destekKonu') || {}).value || '';
   var email = (document.getElementById('destekEmail') || {}).value || '';
   var mesaj = (document.getElementById('destekMesaj') || {}).value || '';
+  var telefon = (document.getElementById('destekTelefon') || {}).value || '';
   konu = String(konu).trim();
   email = String(email).trim().toLowerCase();
   mesaj = String(mesaj).trim();
+  telefon = String(telefon).trim();
+  var telEl = document.getElementById('destekTelefon');
+  if (telEl) telEl.classList.remove('destek-err');
+  var telRakam = telefon.replace(/\D/g, '');
+  if (!telefon || telRakam.length < 10) {
+    if (telEl) { telEl.classList.add('destek-err'); telEl.focus(); }
+    toast(!telefon ? 'Telefon numarası zorunludur' : 'Geçerli bir telefon numarası yazın');
+    return;
+  }
   if (!email) { toast('E-posta adresinizi yazın'); return; }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { toast('Geçerli bir e-posta yazın'); return; }
   if (!konu && !mesaj) { toast('Konu veya mesaj yazın'); return; }
@@ -4272,6 +4288,7 @@ window.destekGonder = function() {
     message: mesaj || '(mesaj yok)',
     file_name: fileName || null,
     user_email: email,
+    phone: telefon,
     user_name: u.name || null,
     musteri_no: u.musteriNo ? String(u.musteriNo) : null,
     status: 'yeni'
@@ -4291,6 +4308,7 @@ window.destekGonder = function() {
     toast('Destek talebiniz alındı');
     var k = document.getElementById('destekKonu'); if (k) k.value = '';
     var e = document.getElementById('destekEmail'); if (e) e.value = '';
+    var t = document.getElementById('destekTelefon'); if (t) t.value = '';
     var m = document.getElementById('destekMesaj'); if (m) m.value = '';
     var d = document.getElementById('destekDosyaAd'); if (d) d.textContent = '';
     if (fileInput) fileInput.value = '';
@@ -4298,7 +4316,7 @@ window.destekGonder = function() {
     console.error(err);
     var body = encodeURIComponent(mesaj || '(mesaj yok)');
     var subject = encodeURIComponent(konu || 'YanMuhasebe Destek');
-    window.location.href = 'mailto:yanmuhasebe@gmail.com?subject=' + subject + '&body=' + encodeURIComponent('Gönderen: ' + email + '\n\n') + body;
+    window.location.href = 'mailto:yanmuhasebe@gmail.com?subject=' + subject + '&body=' + encodeURIComponent('Gönderen: ' + email + '\nTelefon: ' + telefon + '\n\n') + body;
     toast('Buluta yazılamadı, e-posta açılıyor');
   });
 };
@@ -6468,6 +6486,8 @@ pages.destek = function() {
     (isSubExpired() ? '<div style="background:#fef2f2;border:1px solid #fecaca;color:#991b1b;padding:12px;border-radius:8px;margin-bottom:14px;font-size:13px;"><strong>YanMuhasebe ücretsizdir.</strong> Ödeme yaptıktan sonra tüm menüler tekrar açılır. Destek için bu formu kullanabilirsiniz.</div>' : '') +
     '<input class="destek-in input" id="destekKonu" type="text" placeholder="Konu Başlığı" style="width:100%;margin-bottom:10px;padding:12px;border-radius:10px;border:1px solid #e2e8f0;">' +
     '<input class="destek-in input" id="destekEmail" type="email" placeholder="E-posta adresiniz" value="'+esc(u.email||'')+'" style="width:100%;margin-bottom:10px;padding:12px;border-radius:10px;border:1px solid #e2e8f0;">' +
+    '<input class="destek-in input" id="destekTelefon" type="tel" inputmode="tel" autocomplete="tel" placeholder="Telefon numaranız *" required value="'+esc(u.phone||u.telefon||'')+'" style="width:100%;margin-bottom:4px;padding:12px;border-radius:10px;border:1px solid #e2e8f0;">' +
+    '<div class="destek-note" style="margin:0 4px 12px;">Bu Alan Sizinle İletişime Geçebilmek İçin Zorunludur.</div>' +
     '<textarea class="destek-ta input" id="destekMesaj" placeholder="Sorununuzu mümkün olduğunca detaylı yazın..." rows="6" style="width:100%;margin-bottom:12px;padding:12px;border-radius:10px;border:1px solid #e2e8f0;"></textarea>' +
     '<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">' +
     '<button type="button" class="btn btn-lime" onclick="destekGonder()">Gönder</button>' +
