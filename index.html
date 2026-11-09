@@ -2100,6 +2100,15 @@ body{zoom:1!important}
 #content > *:nth-child(3){animation-delay:.1s}
 #content > *:nth-child(4){animation-delay:.14s}
 #content > *:nth-child(n+5){animation-delay:.18s}
+#content > .hm-stats,
+#content .hm-stats,
+#content .hm-flip{
+  animation:none!important;
+  transform:none!important;
+}
+#content .hm-flip .hm-fi{
+  /* flip kendi transition'ını kullanır */
+}
 
 .card,.stat-card,.panel,.bal-card,.hm-p,.lp-card{
   transition:transform .22s cubic-bezier(.22,.8,.25,1), box-shadow .22s ease !important;
@@ -2511,14 +2520,18 @@ html body .hm-top{display:flex;justify-content:space-between;align-items:flex-st
 
 .hm-st{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}.hm-st small{float:none!important;margin:2px 0 0!important;white-space:nowrap}
 
-.hm-flip{perspective:1000px;height:106px;cursor:pointer;outline:none}
-.hm-fi{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .7s cubic-bezier(.4,.2,.2,1)}
+.hm-flip{perspective:1200px;-webkit-perspective:1200px;height:106px;cursor:pointer;outline:none;position:relative;z-index:2;transform:translateZ(0)}
+.hm-fi{position:relative;width:100%;height:100%;transform-style:preserve-3d;-webkit-transform-style:preserve-3d;transition:transform .7s cubic-bezier(.4,.2,.2,1);will-change:transform}
 .hm-intro .hm-fi{animation:hmIntro 1.6s ease-in-out var(--dl,0s) 1}
-.hm-flip.flipped .hm-fi{transform:rotateY(calc(180deg * var(--d,1)))}
-.hm-stat.hm-ff,.hm-stat.hm-fb{position:absolute;inset:0;height:auto;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.hm-flip.flipped .hm-fi{transform:rotateY(calc(180deg * var(--d,1)))!important}
+.hm-stat.hm-ff,.hm-stat.hm-fb{position:absolute;inset:0;width:100%;height:106px!important;box-sizing:border-box;backface-visibility:hidden;-webkit-backface-visibility:hidden;transform-style:preserve-3d}
 .hm-stat.hm-fb{transform:rotateY(180deg)}
 .hm-flip:focus-visible .hm-ff{outline:2px solid #fff;outline-offset:-4px}
 @keyframes hmIntro{0%{transform:rotateY(0)}35%{transform:rotateY(calc(180deg * var(--d,1)))}65%{transform:rotateY(calc(180deg * var(--d,1)))}100%{transform:rotateY(calc(360deg * var(--d,1)))}}
+/* Üst katman animasyonları 3D flip'i bozmasın */
+.hm-stats{transform:none!important;animation:none!important}
+.hm-stats .hm-flip{animation:none!important}
+.hm-stats .hm-flip:not(.hm-intro) .hm-fi{animation:none}
 @media (prefers-reduced-motion:reduce){.hm-fi{animation:none!important;transition:none!important}}
 
 
@@ -3051,6 +3064,20 @@ table.data thead th{background:#eef2ff!important;color:#1e3a8a!important}
 .dd-menu button:hover{background:#dbeafe!important;color:#1d4ed8!important}
 .stat-card,.hm-p{border-radius:12px}
 .toolbar .btn{box-shadow:0 1px 2px rgba(15,23,42,.08)}
+</style>
+<style id="ym-scrollbar-theme">
+/* YanMuhasebe özel kaydırma çubuğu: lacivert zemin + yeşil çubuk */
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:#0d1b30;border-radius:10px}
+::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#34d399,#16a34a);border-radius:10px;border:2px solid #0d1b30}
+::-webkit-scrollbar-thumb:hover{background:linear-gradient(180deg,#6ee7b7,#22c55e)}
+::-webkit-scrollbar-corner{background:#0d1b30}
+html body .sidebar::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#34d399,#16a34a)}
+/* Firefox (Chrome'da webkit kuralları geçerli kalsın diye ayrı tutuldu) */
+@supports not selector(::-webkit-scrollbar){*{scrollbar-width:thin;scrollbar-color:#22c55e #0d1b30}}
+/* Yan menü: üzerine gelince çıkan alttaki yatay kaydırma çubuğunu kaldır */
+html body .sidebar,html body .sidebar-nav,html body .nav-sub{overflow-x:hidden!important}
+html body .sidebar::-webkit-scrollbar:horizontal,html body .sidebar-nav::-webkit-scrollbar:horizontal{display:none!important;height:0!important}
 </style>
 </head>
 <body style="opacity:0;transition:opacity .25s ease">
@@ -4256,7 +4283,7 @@ function cloudSyncAfterLogin(user) {
       return flagsP;
     }).then(function(){
       try { if (typeof go === 'function') { if (window.pages && window.pages.home) go('home'); else setTimeout(function(){ try{go('home');}catch(e){} }, 0); } } catch (e) {}
-      console.log('Bulut senkron: yeni hesap izole', email);
+      /* log kaldırıldı */
     }).catch(function(e) { console.warn('cloudSyncAfterLogin fresh', e); });
   }
 
@@ -4269,7 +4296,7 @@ function cloudSyncAfterLogin(user) {
       try { if (typeof go === 'function') go(state.page || 'home'); } catch (e) {}
     }
     return cloudPushAll().then(function(ok) {
-      console.log('Bulut senkron', ok ? 'tamam' : 'kısmi', email);
+      /* log kaldırıldı */
       var pass = resolveUserPass(user);
       if (pass) ensureCloudSession(email, pass, true).catch(function(){});
       return ok;
@@ -4510,7 +4537,7 @@ var LAND_PAGES = {
   fiyatlar: '<h2>Fiyatlar</h2><ul><li><strong>Aylık:</strong> 504 TL KDV dahil</li><li><strong>Yıllık:</strong> 3.250 TL KDV dahil</li><li><strong>Sistem Alım:</strong> 6.720 TL KDV dahil</li></ul>',
   bizkimiz: '<h2>Biz Kimiz?</h2><p>Biz, Türkiye’deki KOBİ’lerin yanında olmak için yola çıkan YanMuhasebe ekibiyiz. Amacımız muhasebe ve finans süreçlerini daha kolay ve erişilebilir hale getirmektir.</p>',
   duyurular: '<h2>Duyurular</h2><p>Yeni özellikler ve güncellemeler burada paylaşılacaktır.</p>',
-  malimusavir: '<h2>YanMali — Mali Müşavire Özel</h2><p>YanMuhasebe verilerinizi mali müşavirinizle güvenle paylaşın. Panel içinden <strong>YanMali</strong> menüsüne girerek davet linki oluşturabilirsiniz.</p><p>26.11.2026 tarihine kadar ücretsizdir. İletişim: yanmuhasebe@gmail.com</p>',
+  malimusavir: '<h2>YanMali — Mali Müşavire Özel</h2><p>YanMuhasebe verilerinizi mali müşavirinizle güvenle paylaşın. Panel içinden <strong>YanMali</strong> menüsüne girerek davet linki oluşturabilirsiniz.</p><p>26.11.2031 tarihine kadar ücretsizdir. İletişim: yanmuhasebe@gmail.com</p>',
   kosullar: '<h2>YanMuhasebe Kullanım Koşulları</h2> <p style="color:#94a3b8;font-size:13px;margin-bottom:20px;">Son güncelleme tarihi: 10/10/2026</p>  <h3 style="margin:18px 0 8px;font-size:16px;">1. Taraflar ve amaç</h3> <p>İşbu Kullanım Koşulları, YanMuhasebe markası altında sunulan internet sitesi, dijital platform ve ilgili hizmetlerin kullanımına ilişkin şartları düzenler.</p> <ul> <li>Hizmet sağlayıcı / site sahibi: Yunus Emre Çakmak</li> <li>Site URL\'si: robotix-afk.github.io/yanmuhasebe</li> <li>İletişim: 0 (505) 963 9913 (sadece WhatsApp)</li> </ul> <p>Bu koşullar, YanMuhasebe hizmetlerini ziyaret eden, hesap oluşturan veya hizmetlerden yararlanan kullanıcılar için geçerlidir.</p>  <h3 style="margin:18px 0 8px;font-size:16px;">2. Koşulların kabulü</h3> <p>YanMuhasebe\'ye üye olan veya platformu kullanan kullanıcı, bu Kullanım Koşulları\'nı okuduğunu ve anladığını kabul eder. Kullanıcı, koşulları kabul etmiyorsa ilgili sözleşmenin kurulmasını gerektiren işlemleri gerçekleştirmemeli ve platformu kullanmayı bırakmalıdır. Ücretli abonelik işlemlerinde fiyat, ödeme dönemi, hizmet kapsamı ve ilgili diğer sözleşme şartları kullanıcıya ayrıca açıkça sunulur.</p>  <h3 style="margin:18px 0 8px;font-size:16px;">3. Kullanıcı yaşı ve hesap oluşturma</h3> <p>YanMuhasebe\'ye üyelik, 18 yaşını doldurmuş kişilere yöneliktir. Kullanıcı, kayıt sırasında verdiği bilgilerin doğru, güncel ve kendisine ait olduğunu kabul eder. Yanlış veya yanıltıcı bilgiler verilmesi durumunda, yürürlükteki mevzuata ve bu koşullara uygun işlemler yapılabilir. Kullanıcı, hesap giriş bilgilerini ve hesabının güvenliğini korumakla sorumludur. Hesabının yetkisiz kullanıldığını fark ederse YanMuhasebe\'yi uygun iletişim kanalları üzerinden bilgilendirmelidir.</p>  <h3 style="margin:18px 0 8px;font-size:16px;">4. Hizmetin kapsamı</h3> <p>YanMuhasebe, internet üzerinden dijital hizmet sunan bir platformdur. Hizmetlerin özellikleri, kullanım alanları ve erişim şartları platformda açıklanan güncel kapsam çerçevesinde belirlenir. Kullanıcının erişebileceği özellikler, sahip olduğu üyelik veya abonelik planına göre değişebilir. YanMuhasebe, hizmetin geliştirilmesi, güvenliğinin sağlanması ve teknik gerekliliklerin karşılanması amacıyla özelliklerde makul değişiklikler yapabilir.</p>  <h3 style="margin:18px 0 8px;font-size:16px;">5. Kullanıcıların yükümlülükleri</h3> <p>Kullanıcı, YanMuhasebe\'yi kullanırken yürürlükteki mevzuata uygun davranmayı; başkalarının haklarını, gizliliğini ve fikrî mülkiyet haklarını ihlal etmemeyi; hukuka aykırı, yanıltıcı veya zararlı içerikler paylaşmamayı; platformun güvenliğini tehlikeye atacak girişimlerde bulunmamayı; yetkisiz erişim sağlamamayı; başka kullanıcıların hesaplarını izinsiz kullanmamayı; platformu dolandırıcılık veya başka hukuka aykırı amaçlarla kullanmamayı kabul eder. Kullanıcı, kendi hesabı üzerinden gerçekleştirdiği işlemlerden sorumludur.</p>  <h3 style="margin:18px 0 8px;font-size:16px;">6. Kullanıcı tarafından oluşturulan içerikler</h3> <p>Kullanıcı, platforma yüklediği veya paylaştığı içerikler üzerindeki gerekli haklara sahip olduğunu ve bu içeriklerin hukuka uygun olduğunu beyan eder. Kullanıcı, içeriklerinin hizmetin sunulması için teknik olarak işlenmesi amacıyla YanMuhasebe\'ye sınırlı ve münhasır olmayan bir kullanım izni verir; bu izin mülkiyeti devretmez. YanMuhasebe, hukuka aykırı olduğu bildirilen veya koşulları ihlal eden içerikler hakkında mevzuata uygun inceleme ve işlem yapabilir.</p>  <h3 style="margin:18px 0 8px;font-size:16px;">7. Abonelik, ücretler ve ödemeler</h3> <p>YanMuhasebe\'nin ücretli özellikleri abonelik kapsamında sunulabilir. Satın alma öncesinde kullanıcıya plan kapsamı, ücret ve vergiler, süre ve yenileme şartları, ödeme yöntemi ile iptal şartları sunulur. Kullanıcı, satın alma işlemini onaylayarak ilgili fiyat ve abonelik şartlarını kabul eder. Tüketicilerin kanundan doğan hakları saklıdır.</p>  <h3 style="margin:18px 0 8px;font-size:16px;">8. Aboneliğin iptali ve hizmetin sona ermesi</h3> <p>Kullanıcı, aboneliğini platformda sunulan iptal yöntemi veya ilgili iletişim kanalı aracılığıyla sona erdirmek için başvurabilir. İptalin yürürlüğe gireceği tarih ve sonraki ödemelere etkisi, sunulan abonelik şartlarına ve yürürlükteki mevzuata göre belirlenir. YanMuhasebe; güvenlik riski, hukuka aykırı kullanım veya bu koşulların ciddi ihlali durumlarında hesaba ilişkin geçici tedbirler alabilir veya hizmeti sınırlandırabilir.</p>  <h3 style="margin:18px 0 8px;font-size:16px;">9. Fikrî mülkiyet hakları</h3> <p>YanMuhasebe\'nin adı, logosu, tasarımı, yazılımı, arayüzü ve özgün metinleri üzerindeki haklar ilgili hak sahibine aittir. Kullanıcıya, hizmetten bu koşullara uygun yararlanabilmesi için sınırlı, kişisel, devredilemez ve münhasır olmayan bir kullanım hakkı tanınır. Açık izin veya kanuni dayanak olmadan bu unsurlar kopyalanamaz, dağıtılamaz veya satılamaz.</p>  <h3 style="margin:18px 0 8px;font-size:16px;">10. Hizmetin sürekliliği ve teknik sorunlar</h3> <p>YanMuhasebe, hizmetlerin güvenli ve erişilebilir sunulması için makul önlemler almaya çalışır. Bakım, güncelleme, altyapı sorunları veya kontrol dışı olaylar nedeniyle geçici kesintiler yaşanabilir. Bu madde, yürürlükteki mevzuattan doğan sorumlulukları ortadan kaldırmaz.</p>  <h3 style="margin:18px 0 8px;font-size:16px;">11. Muhasebe ve finansal işlemlere ilişkin sorumluluk</h3> <p>Platformdaki bilgiler, hesaplamalar, raporlar veya çıktılar kullanıcı tarafından kontrol edilmelidir. Hizmetin kapsamı ayrıca belirlenmedikçe, platformun kullanılması mali müşavirlik, hukuk veya vergi danışmanlığı sunulduğu anlamına gelmez. Kullanıcı gerektiğinde yetkili bir uzmandan destek almalıdır.</p>  <h3 style="margin:18px 0 8px;font-size:16px;">12. Kişisel veriler ve gizlilik</h3> <p>Kişisel verilerin işlenmesi hakkında YanMuhasebe\'nin Gizlilik Politikası ve KVKK Aydınlatma Metni esas alınır. Kişisel veriler 6698 sayılı KVKK kapsamında işlenir. Kullanıcı, üçüncü kişilere ait verileri yüklerken gerekli hukuki dayanağın bulunmasını sağlamakla yükümlüdür.</p>  <h3 style="margin:18px 0 8px;font-size:16px;">13. Sorumluluğun sınırları</h3> <p>YanMuhasebe\'nin sorumluluğu uygulanabilir kanun hükümleri ve geçerli sözleşmeler çerçevesinde değerlendirilir. Kast veya ağır kusurdan doğan sorumluluk, emredici tüketici hukuku ve KVKK yükümlülükleri bu koşullarla ortadan kaldırılamaz.</p>  <h3 style="margin:18px 0 8px;font-size:16px;">14. Koşullarda değişiklik</h3> <p>YanMuhasebe, hizmetin geliştirilmesi, güvenlik veya mevzuat değişiklikleri nedeniyle bu koşulları güncelleyebilir. Önemli değişiklikler gerektiğinde kullanıcıya bildirilir. Değişiklikler kazanılmış hakları veya emredici mevzuattan doğan hakları ihlal edecek biçimde uygulanamaz.</p>  <h3 style="margin:18px 0 8px;font-size:16px;">15. Uygulanacak hukuk ve uyuşmazlıklar</h3> <p>İşbu Kullanım Koşulları, emredici hükümler saklı kalmak kaydıyla Türkiye Cumhuriyeti hukukuna tabidir. Tüketici uyuşmazlıklarında tüketici hakem heyetleri ve yetkili mercilere başvuru hakları saklıdır.</p>  <h3 style="margin:18px 0 8px;font-size:16px;">16. İletişim</h3> <ul> <li>Marka: YanMuhasebe</li> <li>Ad: Yunus Emre Çakmak</li> <li>E-posta: yanmuhasebe@gmail.com</li> <li>Adres: İstanbul / Bayrampaşa</li> <li>WhatsApp: 0 (505) 963 9913</li> </ul> '
 };
 window.openLandSection = function(id) {
@@ -6260,9 +6287,11 @@ window.pages = window.pages || {};
 var pages = window.pages;
 
 function hmFlip(cls, ic, v1, l1, v2, l2, d, delay) {
-  var i = window._hmI = (window._hmI || 0) + 1, tg = "this.classList.toggle('flipped')";
-  var fl = (window._hmFl || [])[i - 1] ? ' flipped' : '', pl = window._hmPlay ? ' hm-intro' : '';
-  return '<div class="hm-flip' + pl + fl + '" style="--d:' + d + ';--dl:' + delay + 's" role="button" tabindex="0" title="Tıklayın: ' + l2 + '" onclick="' + tg + '" onkeydown="if(event.key===\'Enter\')' + tg + '">' +
+  var i = window._hmI = (window._hmI || 0) + 1;
+  var tg = "event.stopPropagation();this.classList.toggle('flipped')";
+  var fl = (window._hmFl || [])[i - 1] ? ' flipped' : '';
+  var pl = (window._hmPlay !== false) ? ' hm-intro' : '';
+  return '<div class="hm-flip' + pl + fl + '" style="--d:' + d + ';--dl:' + (delay || 0) + 's" role="button" tabindex="0" title="Tıklayın: ' + l2 + '" onclick="' + tg + '" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){' + tg + '}">' +
     '<div class="hm-fi"><div class="hm-stat ' + cls + ' hm-ff">' + ic + '<div><b>' + v1 + '</b><span>' + l1 + '</span></div></div>' +
     '<div class="hm-stat ' + cls + ' hm-fb">' + ic + '<div><b>' + v2 + '</b><span>' + l2 + '</span></div></div></div></div>';
 }
@@ -6549,7 +6578,8 @@ try{ setTimeout(function(){ try{ if(typeof calUpdateTop==="function") calUpdateT
 pages.home = function() {
   try { setTimeout(ymShowPendingMukDavet, 400); try{ setTimeout(ymShowPendingUserDavet, 500); }catch(e){}; } catch (e) {}
   var _c = document.getElementById('content'), _prev = _c ? _c.querySelectorAll('.hm-flip') : [];
-  window._hmPlay = !_prev.length;          /* içerikte kart yoksa: ana sayfaya yeni giriliyor */
+  /* Ana sayfaya her gelişte kartlar bir kez dönsün; flip durumu korunur */
+  window._hmPlay = true;
   window._hmFl = [].map.call(_prev, function(e) { return e.classList.contains('flipped'); });
   window._hmI = 0;
   var demoBanner = (state.user && (state.user.isDemo||state.user.demo)) ? '<div class="demo-banner">DEMO MOD — Bu hesap önizlemedir. Veriler kaydedilmez, bulut senkronu kapalıdır.</div>' : '';
@@ -6864,12 +6894,12 @@ function ymSvg(p){return '<svg viewBox="0 0 24 24" width="30" height="30" fill="
 pages.yanmali = function() {
   var v = state._view || {};
   if (v.tab) return ymAyarSayfa(v.tab);
-  var free = Date.now() < new Date(2026, 10, 26).getTime(), no = ymSelfNo();
+  var free = Date.now() < new Date(2031, 10, 26).getTime(), no = ymSelfNo();
   var sec = function(ic, h, body) { return '<div class="ymy-sec"><div class="ymy-ic">' + ic + '</div><div><h3>' + h + '</h3>' + body + '</div></div>'; };
   return '<div class="toolbar"><button type="button" class="ymy-go" onclick="state._view={tab:\'muh\'};go(\'yanmali\')">DAVET ET</button>' +
     '<button type="button" onclick="window.open(\'yanmali.html\',\'_blank\')">Mali Müşavir Paneli</button></div>' +
     '<div class="ymy-dark"><h1>YANMALİ</h1><div class="ymy-line"></div>' +
-    '<p class="ymy-sub"><b>yanmali.html</b> YanMuhasebe için Mali Müşavir Paneli' + (free ? ' <span class="ymy-free">26.11.2026 tarihine kadar ücretsiz</span>' : '') + '</p>' +
+    '<p class="ymy-sub"><b>yanmali.html</b> YanMuhasebe için Mali Müşavir Paneli' + (free ? ' <span class="ymy-free">26.11.2031 tarihine kadar ücretsiz</span>' : '') + '</p>' +
     '<div class="ymy-what"><div class="ymy-q">?</div><div><h3>YANMALİ NEDİR?</h3>' +
       '<p>YanMali, YanMuhasebe\'deki işletme verilerinizi mali müşavirinizle online paylaşmanızı sağlar. Mali müşaviriniz, ay içinde muhasebeye konu olan kayıtlarınıza kendi panelinden <b>salt okunur</b> olarak ulaşır.</p>' +
       '<p><b>Ay sonu muhasebe işlemleri hem sizin hem de mali müşaviriniz için çok daha rahat olur.</b></p></div></div>' +
@@ -6884,7 +6914,7 @@ pages.yanmali = function() {
       '<p>Mali müşaviriniz verilerinizi <b>yalnızca görüntüler</b>; kayıt ekleyemez, değiştiremez ve silemez. Tüm düzenleme sizin hesabınızda yapılır.</p>' +
       '<p>Erişimi kaldırdığınız an, mali müşavirinize bildirim gider ve panelde verilerinize ulaşamaz.</p>') +
     sec(ymSvg('<path d="M7 5v14M7 10h6a3 3 0 010 6H7"/><path d="M5 12h8"/>'), '4. BUNUN ÜCRETİ NEDİR?',
-      '<p>' + (free ? '<b>26.11.2026 tarihine kadar YanMali ücretsizdir.</b> Sonrası için destek hattımızdan plan bilgisi alabilirsiniz.' : 'Ücretsiz dönem sona erdi; plan bilgisi için destek hattımıza ulaşın.') + '</p>') +
+      '<p>' + (free ? '<b>26.11.2031 tarihine kadar YanMali ücretsizdir.</b> Sonrası için destek hattımızdan plan bilgisi alabilirsiniz.' : 'Ücretsiz dönem sona erdi; plan bilgisi için destek hattımıza ulaşın.') + '</p>') +
     sec(ymSvg('<path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A15 15 0 013 6a2 2 0 012-2z"/>'), 'Yardım',
       '<p>Takıldığınız her konuda <a href="mailto:yanmuhasebe@gmail.com">yanmuhasebe@gmail.com</a> adresinden veya <a href="https://wa.me/905059639913" target="_blank" rel="noopener">WhatsApp: 0 (505) 963 99 13</a> üzerinden bize ulaşın.</p>') +
     '</div>';
@@ -8248,6 +8278,7 @@ function urunForm() {
   var kod = u.kod||u.urunKodu||'';
   var stok0 = (u.stok!=null?u.stok:'');
   var aciklama = u.aciklama||u.desc||'';
+  var aciklamaFat = !!u.aciklamaFaturada;
 
   var panels = {
     tanim: '<div class="uf-grid2">'+
@@ -8260,7 +8291,8 @@ function urunForm() {
       '<div class="field"><label>Satış Birimi</label><select id="u_birim" class="input">'+optList(birimler, birim)+'</select></div>'+
       '<div class="field"><label>Ürün Kodu</label><input id="u_kod" class="input" value="'+esc(kod)+'" placeholder="Örn. A15"></div>'+
       '<div class="field"><label>Başlangıç Stoğu</label><input id="u_stok" class="input" type="number" step="1" value="'+esc(String(stok0))+'" placeholder="0"></div>'+
-      '<div class="field full"><label>Açıklama</label><textarea id="u_aciklama" class="input" rows="2" placeholder="Ürün açıklaması (isteğe bağlı)">'+esc(aciklama)+'</textarea></div>'+
+      '<div class="field full"><label>Açıklama</label><textarea id="u_aciklama" class="input" rows="2" placeholder="Ürün açıklaması (isteğe bağlı)">'+esc(aciklama)+'</textarea>'+
+        '<label style="display:flex;gap:6px;align-items:center;margin-top:6px;font-weight:400"><input type="checkbox" id="u_aciklama_fatura"'+(aciklamaFat?' checked':'')+'> Açıklama faturada görünsün</label></div>'+
       '</div>',
     fiyat: '<div class="uf-grid2">'+
       '<div class="field"><label>Satış Fiyatı</label><div class="uf-row"><input id="u_fiyat" class="input" type="number" step="0.01" value="'+(u.fiyat!=null?u.fiyat:(u.satisFiyat!=null?u.satisFiyat:''))+'"><select id="u_para" class="input uf-curr">'+optList(curr, para)+'</select></div></div>'+
@@ -8492,7 +8524,7 @@ window.ufDefKaydet = function(store, label) {
   } catch (e) {}
 };
 window.ufTagEkle = function() {
-  var inp=document.getElementById('u_tag_inp');
+  var inp=document.getElementById('u_tag_in');
   var val=(inp&&inp.value||'').trim(); if(!val) return;
   var draft=ufCollectDraft();
   draft.etiketler = draft.etiketler||[];
