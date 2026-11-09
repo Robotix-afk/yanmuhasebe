@@ -2085,12 +2085,84 @@ body{background:var(--bg)}
 body{zoom:1!important}
 #app,#authScreen{min-height:100vh!important}
 .sidebar{height:100vh!important;max-height:100vh!important}
-/* Hareket: sadece kullanıcı eylemine yanıt */
-#content>*{animation:none!important}
-.card:hover,.stat-card:hover,.lp-card:hover{transform:none!important;box-shadow:var(--shadow)!important}
-.btn:hover{transform:none!important}
-.sidebar .nav-item:hover{transform:none!important}
-@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+/* ===== Canlı ama sade animasyon katmanı ===== */
+@keyframes ymIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes ymPop{from{opacity:0;transform:scale(.96) translateY(6px)}to{opacity:1;transform:none}}
+@keyframes ymFade{from{opacity:0}to{opacity:1}}
+@keyframes ymSlideR{from{opacity:0;transform:translateX(18px)}to{opacity:1;transform:none}}
+@keyframes ymSoftPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.015)}}
+@keyframes ymBarGrow{from{transform:scaleX(0);transform-origin:left}to{transform:scaleX(1);transform-origin:left}}
+@keyframes ymShine{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+#content{animation:ymFade .28s ease}
+#content > *{animation:ymIn .45s cubic-bezier(.22,.8,.25,1) both}
+#content > *:nth-child(2){animation-delay:.05s}
+#content > *:nth-child(3){animation-delay:.1s}
+#content > *:nth-child(4){animation-delay:.14s}
+#content > *:nth-child(n+5){animation-delay:.18s}
+
+.card,.stat-card,.panel,.bal-card,.hm-p,.lp-card{
+  transition:transform .22s cubic-bezier(.22,.8,.25,1), box-shadow .22s ease !important;
+}
+.card:hover,.hm-p:hover,.lp-card:hover{
+  transform:translateY(-3px) !important;
+  box-shadow:0 14px 32px rgba(15,23,42,.12) !important;
+}
+.stat-card:hover{transform:translateY(-4px) !important; box-shadow:0 16px 36px rgba(79,70,229,.18) !important}
+
+.btn{
+  transition:transform .15s ease, box-shadow .2s ease, filter .2s ease, background .2s ease !important;
+}
+.btn:hover{transform:translateY(-2px) !important; filter:brightness(1.05); box-shadow:0 8px 20px rgba(15,23,42,.14) !important}
+.btn:active{transform:translateY(0) scale(.98) !important}
+
+.sidebar .nav-item{
+  transition:background .18s ease, color .18s ease, transform .18s ease, box-shadow .18s ease !important;
+}
+.sidebar .nav-item:hover{transform:translateX(4px) !important}
+.sidebar .nav-item.active{
+  box-shadow:inset 3px 0 0 #4f46e5 !important;
+  transition:background .2s ease, box-shadow .2s ease !important;
+}
+.nav-group-btn .chev{transition:transform .25s cubic-bezier(.22,.8,.25,1) !important}
+
+.modal-bg,.auth-modal-bg{animation:ymFade .22s ease}
+.modal,.auth-modal{animation:ymPop .32s cubic-bezier(.22,.8,.25,1)}
+.toast,#toast{animation:ymPop .3s cubic-bezier(.22,.8,.25,1) !important}
+
+.hm-pb .bar i, .bar-row .bar i, .bar i{
+  animation:ymBarGrow .7s cubic-bezier(.22,.8,.25,1) both;
+}
+.hm-duy-item{transition:background .2s ease}
+.hm-duy-arr{transition:transform .25s cubic-bezier(.22,.8,.25,1), background .2s ease !important}
+.hm-duy-bd{animation:ymFade .25s ease}
+
+.al-table tbody tr, table.data tbody tr, .al-table tr{
+  transition:background .15s ease, transform .15s ease;
+}
+.al-table tbody tr:hover, table.data tbody tr:hover{
+  background:#f1f5f9 !important;
+}
+
+.input, select, textarea, input[type=text], input[type=number], input[type=email], input[type=password]{
+  transition:border-color .15s ease, box-shadow .15s ease, transform .15s ease !important;
+}
+.input:focus, select:focus, textarea:focus, input:focus{
+  transform:translateY(-1px);
+}
+
+.hm-banner{
+  background-size:200% 100%;
+  animation:ymShine 6s linear infinite;
+}
+.demo-banner{animation:ymSoftPulse 2.8s ease-in-out infinite}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+}
+#content.ym-enter{animation:ymFade .28s ease}
+#content.ym-enter>*{animation:ymIn .45s cubic-bezier(.22,.8,.25,1) both}
+
 /* Butonlar */
 .btn-lime,.btn-lime:hover{background:#4f46e5!important;color:#fff!important}
 .btn-lime:hover{background:#4338ca!important}
@@ -5335,6 +5407,15 @@ window.flipHomeStat = function(kind) {
 };
 
 function go(page) {
+  try {
+    var c = document.getElementById('content');
+    if (c) {
+      c.classList.remove('ym-enter');
+      void c.offsetWidth;
+      c.classList.add('ym-enter');
+    }
+  } catch (e) {}
+
   try {
     if (state.user && typeof ymIsEmailVerifyLocked==='function' && ymIsEmailVerifyLocked()) {
       var allowVerify = { home:1, destek:1, profilim:1, locked:1 };
