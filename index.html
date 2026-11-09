@@ -7073,7 +7073,7 @@ pages.musteriler = function() {
   if (state._view && state._view.form) return cariForm('musteri');
   if (state._view && state._view.detail) return cariDetail('musteri', state._view.detail);
   var list = dbGet('musteriler') || [];
-  var filtre = (state._view && state._view.filtre) || 'all';
+  var filtre = (state._view && state._view.filtre) || 'aktif';
   if (filtre === 'aktif') list = list.filter(function(m){ return m.aktif !== false && !m.pasif; });
   if (filtre === 'pasif') list = list.filter(function(m){ return m.aktif === false || m.pasif; });
   var rows = list.map(function(m) {
@@ -7111,7 +7111,7 @@ pages.tedarikciler = function() {
   if (state._view && state._view.form) return cariForm('tedarikci');
   if (state._view && state._view.detail) return cariDetail('tedarikci', state._view.detail);
   var list = dbGet('tedarikciler') || [];
-  var filtre = (state._view && state._view.filtre) || 'all';
+  var filtre = (state._view && state._view.filtre) || 'aktif';
   if (filtre === 'aktif') list = list.filter(function(m){ return m.aktif !== false && !m.pasif; });
   if (filtre === 'pasif') list = list.filter(function(m){ return m.aktif === false || m.pasif; });
   var rows = list.map(function(m) {
@@ -7662,7 +7662,6 @@ function cariDetail(type, id) {
       '<button type="button" onclick="closeAllDd();openCariTahsil(\''+id+'\',\'musteri\',\'Nakit\')">Nakit - Kredi Kartı - Banka</button>' +
       '<button type="button" onclick="closeAllDd();cariBakiyeDuzelt(\''+id+'\',\'musteri\')">Bakiye düzelt</button>' +
       '</div></div>' +
-      '<button type="button" class="btn btn-ghost btn-sm" onclick="go(\'musteriler\')">Tahsilat İste</button>' +
       '<div class="dd" id="ddEkstre"><button type="button" class="btn btn-ghost btn-sm" onclick="toggleDd(\'ddEkstre\')">Hesap Ekstresi ▾</button>' +
       '<div class="dd-menu"><button type="button" onclick="closeAllDd();cariEkstre(\''+id+'\',\'musteri\',0)">Ekstre</button><button type="button" onclick="closeAllDd();cariEkstre(\''+id+'\',\'musteri\',1)">Detaylı Ekstre</button></div></div>' +
       '<div class="dd" id="ddDiger"><button type="button" class="btn btn-rose btn-sm" onclick="toggleDd(\'ddDiger\')">Diğer İşlemler ▾</button>' +
@@ -8278,7 +8277,6 @@ function urunForm() {
   var kod = u.kod||u.urunKodu||'';
   var stok0 = (u.stok!=null?u.stok:'');
   var aciklama = u.aciklama||u.desc||'';
-  var aciklamaFat = !!u.aciklamaFaturada;
 
   var panels = {
     tanim: '<div class="uf-grid2">'+
@@ -8291,8 +8289,7 @@ function urunForm() {
       '<div class="field"><label>Satış Birimi</label><select id="u_birim" class="input">'+optList(birimler, birim)+'</select></div>'+
       '<div class="field"><label>Ürün Kodu</label><input id="u_kod" class="input" value="'+esc(kod)+'" placeholder="Örn. A15"></div>'+
       '<div class="field"><label>Başlangıç Stoğu</label><input id="u_stok" class="input" type="number" step="1" value="'+esc(String(stok0))+'" placeholder="0"></div>'+
-      '<div class="field full"><label>Açıklama</label><textarea id="u_aciklama" class="input" rows="2" placeholder="Ürün açıklaması (isteğe bağlı)">'+esc(aciklama)+'</textarea>'+
-        '<label style="display:flex;gap:6px;align-items:center;margin-top:6px;font-weight:400"><input type="checkbox" id="u_aciklama_fatura"'+(aciklamaFat?' checked':'')+'> Açıklama faturada görünsün</label></div>'+
+      '<div class="field full"><label>Açıklama</label><textarea id="u_aciklama" class="input" rows="2" placeholder="Ürün açıklaması (isteğe bağlı)">'+esc(aciklama)+'</textarea></div>'+
       '</div>',
     fiyat: '<div class="uf-grid2">'+
       '<div class="field"><label>Satış Fiyatı</label><div class="uf-row"><input id="u_fiyat" class="input" type="number" step="0.01" value="'+(u.fiyat!=null?u.fiyat:(u.satisFiyat!=null?u.satisFiyat:''))+'"><select id="u_para" class="input uf-curr">'+optList(curr, para)+'</select></div></div>'+
@@ -18621,10 +18618,9 @@ NAV.length=0;
  {id:'grp-raporlar',label:'Raporlar',icon:'chart',children:raporlar},
  {id:'yanmali',label:'YanMali',icon:'briefcase'},
  {id:'destek',label:'Yardım',icon:'help'},
- {id:'fihrist',label:'Fihrist',icon:'phone'},
  {id:'kilit',label:'Ekran Kilidi',icon:'key'}
 ].forEach(function(x){NAV.push(x)});
-Object.assign(TITLES,{teklifler:'Teklifler',fihrist:'Fihrist',kilit:'Ekran Kilidi',demirbaslar:'Demirbaşlar',gelenEfaturalar:'Gelen E-Faturalar',olusturulanEfaturalar:'Oluşturulan E-Faturalar',arsivlenenFaturalar:'Arşivlenen Faturalar',efaturaKayit:'E-Fatura Kaydı',gelenFaturalar:'Gelen E-Faturalar'});
+Object.assign(TITLES,{teklifler:'Teklifler',kilit:'Ekran Kilidi',demirbaslar:'Demirbaşlar',gelenEfaturalar:'Gelen E-Faturalar',olusturulanEfaturalar:'Oluşturulan E-Faturalar',arsivlenenFaturalar:'Arşivlenen Faturalar',efaturaKayit:'E-Fatura Kaydı',gelenFaturalar:'Gelen E-Faturalar'});
 Y.buildNav();
 /* Üst çubuk: tarih rozeti, menü düğmesi, alt bilgi */
 var tr=document.querySelector('.topbar-right');
