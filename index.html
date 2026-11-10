@@ -1947,7 +1947,7 @@ tbody tr:hover{background:#f1f5f9}
 
 /* Sidebar */
 .sidebar .nav-item{border-radius:10px; transition:background .15s ease, color .15s ease, transform .15s ease}
-.sidebar .nav-item:hover{transform:translateX(2px)}
+.sidebar .nav-item:hover{transform:none}
 .sidebar .nav-item.active{box-shadow:inset 3px 0 0 #84cc16}
 
 /* Toolbar */
@@ -2128,7 +2128,7 @@ body{zoom:1!important}
 .sidebar .nav-item{
   transition:background .18s ease, color .18s ease, transform .18s ease, box-shadow .18s ease !important;
 }
-.sidebar .nav-item:hover{transform:translateX(4px) !important}
+.sidebar .nav-item:hover{transform:none !important}
 .sidebar .nav-item.active{
   box-shadow:inset 3px 0 0 #4f46e5 !important;
   transition:background .2s ease, box-shadow .2s ease !important;
@@ -3066,18 +3066,28 @@ table.data thead th{background:#eef2ff!important;color:#1e3a8a!important}
 .toolbar .btn{box-shadow:0 1px 2px rgba(15,23,42,.08)}
 </style>
 <style id="ym-scrollbar-theme">
-/* YanMuhasebe özel kaydırma çubuğu: lacivert zemin + yeşil çubuk */
-::-webkit-scrollbar{width:10px;height:10px}
-::-webkit-scrollbar-track{background:#0d1b30;border-radius:10px}
-::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#34d399,#16a34a);border-radius:10px;border:2px solid #0d1b30}
-::-webkit-scrollbar-thumb:hover{background:linear-gradient(180deg,#6ee7b7,#22c55e)}
-::-webkit-scrollbar-corner{background:#0d1b30}
-html body .sidebar::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#34d399,#16a34a)}
-/* Firefox (Chrome'da webkit kuralları geçerli kalsın diye ayrı tutuldu) */
-@supports not selector(::-webkit-scrollbar){*{scrollbar-width:thin;scrollbar-color:#22c55e #0d1b30}}
-/* Yan menü: üzerine gelince çıkan alttaki yatay kaydırma çubuğunu kaldır */
-html body .sidebar,html body .sidebar-nav,html body .nav-sub{overflow-x:hidden!important}
-html body .sidebar::-webkit-scrollbar:horizontal,html body .sidebar-nav::-webkit-scrollbar:horizontal{display:none!important;height:0!important}
+/* YanMuhasebe: lacivert zemin + yeşil kaydırma çubuğu */
+*{scrollbar-width:thin;scrollbar-color:#22c55e #0d1b30}
+::-webkit-scrollbar{width:10px!important;height:10px!important}
+::-webkit-scrollbar-track{background:#0d1b30!important;border-radius:10px}
+::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#34d399 0%,#15803d 100%)!important;border-radius:10px;border:2px solid #0d1b30}
+::-webkit-scrollbar-thumb:hover{background:linear-gradient(180deg,#6ee7b7 0%,#16a34a 100%)!important}
+::-webkit-scrollbar-corner{background:#0d1b30!important}
+/* Yan menü: hover'da çıkan yatay (alttaki) çubuğu tamamen kapat */
+html body .sidebar,
+html body .sidebar-nav,
+html body .nav-sub,
+html body .sidebar-foot{
+  overflow-x:hidden!important;
+}
+html body .sidebar::-webkit-scrollbar:horizontal,
+html body .sidebar-nav::-webkit-scrollbar:horizontal,
+html body .nav-sub::-webkit-scrollbar:horizontal{
+  display:none!important;height:0!important;width:0!important;
+}
+/* Menü öğesi kayması taşma yaratmasın */
+html body .sidebar .nav-item:hover{transform:none!important}
+html body .sidebar .nav-item{transform:none!important}
 </style>
 <style id="ym-pasif-cari">
 tr.cari-pasif td{background:#d1d5db!important;color:#4b5563!important}
@@ -3555,8 +3565,8 @@ function eBelgeModal(){openModal('e-Belge İşlemleri','<p style="padding:8px 0"
 'use strict';
 
 /* ========== CONFIG ========== */
-var SB_URL = 'https://rbpvbarbsqrvefobbohf.supabase.co/rest/v1/';
-var SB_KEY = 'sb_publishable_onAmiFT09TzOASCr2FOJng_bNYovXUZ';
+var SB_URL = 'https://fetyryvmnohtkqijpfcv.supabase.co/rest/v1/';
+var SB_KEY = 'sb_publishable_N9p5c78--OKmfm7SnvCdgg_qjNCP4xi';
 var YT_LOGO = 'data:image/png;base64,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';
 window.YT_LOGO = YT_LOGO;
 
@@ -3798,44 +3808,61 @@ function cloudUserId() {
 }
 
 function ensureCloudSession(email, pass, force) {
-  email = String(email || '').toLowerCase();
-  pass = pass || '';
+  email = String(email || '').toLowerCase().trim();
+  pass = String(pass || '');
   if (!email || !pass) return Promise.resolve(null);
   var existing = getCloudSession();
   if (!force && existing && existing.user && String(existing.user.email || '').toLowerCase() === email && existing.access_token) {
     return Promise.resolve(existing);
   }
-  var AUTH = (typeof AUTH_URL !== 'undefined' ? AUTH_URL : SB_URL.replace('/rest/v1/', '/auth/v1/'));
-  return fetch(AUTH + 'token?grant_type=password', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY },
-    body: JSON.stringify({ email: email, password: pass })
-  }).then(function(r) { return r.json().then(function(j) { return { ok: r.ok, j: j }; }); })
-  .then(function(x) {
-    if (x.ok && x.j.access_token && x.j.user) {
-      setCloudSession(x.j);
+  var AUTH = (typeof AUTH_URL !== 'undefined' ? AUTH_URL : String(SB_URL || '').replace('/rest/v1/', '/auth/v1/'));
+  var hdr = { 'Content-Type': 'application/json', 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY };
+  function loginOnce() {
+    return fetch(AUTH + 'token?grant_type=password', {
+      method: 'POST', headers: hdr,
+      body: JSON.stringify({ email: email, password: pass })
+    }).then(function(r) { return r.json().then(function(j) { return { ok: r.ok, status: r.status, j: j }; }); });
+  }
+  function signupOnce() {
+    return fetch(AUTH + 'signup', {
+      method: 'POST', headers: hdr,
+      body: JSON.stringify({
+        email: email,
+        password: pass,
+        data: { app: 'yanmuhasebe' }
+      })
+    }).then(function(r) { return r.json().then(function(j) { return { ok: r.ok, status: r.status, j: j }; }); });
+  }
+  function accept(j) {
+    if (j && j.access_token && j.user) {
+      setCloudSession(j);
       return getCloudSession();
     }
-    // hesap yoksa oluştur (e-posta doğrulaması kapalı olmalı)
-    return fetch(AUTH + 'signup', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY },
-      body: JSON.stringify({ email: email, password: pass })
-    }).then(function(r) { return r.json().then(function(j) { return { ok: r.ok, j: j }; }); })
-    .then(function(y) {
-      if (y.ok && y.j.access_token && y.j.user) {
-        setCloudSession(y.j);
-        return getCloudSession();
-      }
-      // signup token vermezse tekrar login dene
-      return fetch(AUTH + 'token?grant_type=password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY },
-        body: JSON.stringify({ email: email, password: pass })
-      }).then(function(r) { return r.json().then(function(j) { return { ok: r.ok, j: j }; }); })
-      .then(function(z) {
-        if (z.ok && z.j.access_token && z.j.user) { setCloudSession(z.j); return getCloudSession(); }
-        console.warn('Bulut oturumu yok', y.j || x.j || z.j);
+    // bazen { access_token, refresh_token, user } yerine session altında gelir
+    if (j && j.session && j.session.access_token) {
+      setCloudSession({ access_token: j.session.access_token, refresh_token: j.session.refresh_token, user: j.user || j.session.user });
+      return getCloudSession();
+    }
+    return null;
+  }
+  return loginOnce().then(function(x) {
+    var s = accept(x.j);
+    if (s) return s;
+    // invalid login → hesap yok veya şifre yanlış; signup dene
+    return signupOnce().then(function(y) {
+      var s2 = accept(y.j);
+      if (s2) return s2;
+      // signup "user already registered" → tekrar login
+      return loginOnce().then(function(z) {
+        var s3 = accept(z.j);
+        if (s3) return s3;
+        try {
+          window.__ymCloudAuthErr = (z.j && (z.j.error_description || z.j.msg || z.j.error))
+            || (y.j && (y.j.error_description || y.j.msg || y.j.error))
+            || (x.j && (x.j.error_description || x.j.msg || x.j.error))
+            || 'unknown';
+        } catch (e) {}
+        console.warn('Bulut oturumu yok', window.__ymCloudAuthErr, x.j, y.j, z.j);
         return null;
       });
     });
@@ -4687,7 +4714,6 @@ window.doRegister = function() {
   users.push(user);
   localStorage.setItem('ym2_users', JSON.stringify(users));
   saveUser(user);
-  authSyncUser(user);
   try {
     fetch(SB_URL + 'app_customers', {
       method: 'POST',
@@ -4710,66 +4736,94 @@ window.doRegister = function() {
       })
     }).catch(function(){});
   } catch (e) {}
-  setAuthLoading(false, 'register');
-  try {
-    user._freshRegister = true;
-    saveUser(user);
-    wipeLocalUserData();
-  } catch (e) {}
-  try { ensureDefaultHesaplar(); } catch(e) {}
-  // Davet linki ile kayıt: e-posta eşleşen pending daveti kabul et
-  try {
-    var invId = null;
-    try { invId = new URLSearchParams(location.search).get('invite'); } catch(e) {}
-    if (!invId) { try { invId = sessionStorage.getItem('ym_pending_invite'); } catch(e) {} }
-    var acceptInvite = function(inv) {
-      if (!inv || inv.status !== 'pending') return;
-      inv.status = 'accepted';
-      inv.answeredAt = new Date().toISOString();
-      inv.answerName = user.name;
-      inv.answerEmail = user.email;
-      inv.toNo = inv.toNo || String(user.musteriNo || '');
-      var list = ymUserInvitesRead();
-      var ix = list.findIndex(function(x){ return String(x.id)===String(inv.id); });
-      if (ix >= 0) list[ix] = inv; else list.push(inv);
-      ymUserInvitesWrite(list);
-      try { ymInvUpsertCloud(inv); } catch(e) {}
-      try {
-        if (typeof setMember === 'function') setMember(inv);
-      } catch(e) {
-        user.wsOwner = inv.fromEmail || inv.fromNo;
-        user.wsOwnerNo = inv.fromNo;
-        user.wsOwnerName = inv.fromName;
-        user.wsInvId = inv.id;
-        saveUser(user);
-      }
-      try { sessionStorage.removeItem('ym_pending_invite'); } catch(e) {}
-      toast('Davet kabul edildi — ekibe bağlandınız');
-    };
-    if (invId) {
-      var localInv = ymUserInvitesRead().filter(function(x){ return String(x.id)===String(invId); })[0];
-      if (localInv) acceptInvite(localInv);
-      else {
-        // cloud'dan çek
+  function ymAfterRegister() {
+    try {
+      user._freshRegister = true;
+      saveUser(user);
+      wipeLocalUserData();
+    } catch (e) {}
+    try { ensureDefaultHesaplar(); } catch(e) {}
+    // Davet linki ile kayıt
+    try {
+      var invId = null;
+      try { invId = new URLSearchParams(location.search).get('invite'); } catch(e) {}
+      if (!invId) { try { invId = sessionStorage.getItem('ym_pending_invite'); } catch(e) {} }
+      var acceptInvite = function(inv) {
+        if (!inv || inv.status !== 'pending') return;
+        inv.status = 'accepted';
+        inv.answeredAt = new Date().toISOString();
+        inv.answerName = user.name;
+        inv.answerEmail = user.email;
+        inv.toNo = inv.toNo || String(user.musteriNo || '');
+        var list = ymUserInvitesRead();
+        var ix = list.findIndex(function(x){ return String(x.id)===String(inv.id); });
+        if (ix >= 0) list[ix] = inv; else list.push(inv);
+        ymUserInvitesWrite(list);
+        try { ymInvUpsertCloud(inv); } catch(e) {}
         try {
-          fetch(SB_URL + 'user_invites?id=eq.' + encodeURIComponent(invId) + '&select=*', {
+          if (typeof setMember === 'function') setMember(inv);
+        } catch(e) {
+          user.wsOwner = inv.fromEmail || inv.fromNo;
+          user.wsOwnerNo = inv.fromNo;
+          user.wsOwnerName = inv.fromName;
+          user.wsInvId = inv.id;
+          saveUser(user);
+        }
+        try { sessionStorage.removeItem('ym_pending_invite'); } catch(e) {}
+        toast('Davet kabul edildi — ekibe bağlandınız');
+      };
+      if (invId) {
+        var localInv = ymUserInvitesRead().filter(function(x){ return String(x.id)===String(invId); })[0];
+        if (localInv) acceptInvite(localInv);
+        else {
+          try {
+            fetch(SB_URL + 'user_invites?id=eq.' + encodeURIComponent(invId) + '&select=*', {
+              headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
+            }).then(function(r){ return r.ok?r.json():[]; }).then(function(rows){
+              if (rows && rows[0] && typeof ymInvToLocal === 'function') acceptInvite(ymInvToLocal(rows[0]));
+            }).catch(function(){});
+          } catch(e) {}
+        }
+      } else {
+        try {
+          fetch(SB_URL + 'user_invites?answer_email=eq.' + encodeURIComponent(user.email) + '&status=eq.pending&select=*', {
             headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
           }).then(function(r){ return r.ok?r.json():[]; }).then(function(rows){
             if (rows && rows[0] && typeof ymInvToLocal === 'function') acceptInvite(ymInvToLocal(rows[0]));
+            else if (rows && rows[0]) acceptInvite(rows[0]);
           }).catch(function(){});
         } catch(e) {}
       }
-    } else {
-      // e-posta ile pending davet var mı
+    } catch(e) {}
+    try { enterApp(); } catch (e) {}
+  }
+  // Supabase Auth'a yaz — diğer cihazlardan giriş için
+  ensureCloudSession(user.email, user.pass, true).then(function(sess) {
+    setAuthLoading(false, 'register');
+    if (sess) {
+      user.authSynced = true;
       try {
-        ymInvFetchByTo(null, user.email).then(function(rows){
-          if (rows && rows[0]) acceptInvite(rows[0]);
-        });
-      } catch(e) {}
+        var us = readUsers();
+        us.forEach(function(x){ if (x.email === user.email) x.authSynced = true; });
+        writeUsers(us);
+      } catch (e) {}
+      toast('Kayıt başarılı — tüm cihazlardan girişe hazır');
+    } else {
+      var ce = String(window.__ymCloudAuthErr || '');
+      if (/confirm|verify/i.test(ce)) {
+        toast('Kayıt alındı. Supabase e-posta onayı açıksa gelen linki onaylayın.');
+      } else {
+        toast('Kayıt alındı. Bulut senkronu eksik olabilir — bir kez daha giriş deneyin.');
+      }
     }
-  } catch(e) {}
-  toast('Hoş geldiniz, ' + name);
-  enterApp();};
+    ymAfterRegister();
+  }).catch(function() {
+    setAuthLoading(false, 'register');
+    ymAfterRegister();
+  });
+  return;
+};
+
 
 function ensureDefaultHesaplar() {
   var hs = [];
@@ -5057,72 +5111,105 @@ window.doLogin = function() {
   if (!id || !pass) return authError('Bilgileri girin.');
   if (!requireRecaptcha()) return;
   setAuthLoading(true, 'login');
-  var users = [];
-  try { users = JSON.parse(localStorage.getItem('ym2_users') || '[]'); } catch(e) {}
-  var user = users.find(function(u){
-    return (u.email === id || String(u.musteriNo) === id) && u.pass === pass;
-  });
+
   var finish = function(user) {
-  // Eski 6 haneli sayısal şifre -> zorunlu güncelleme
-  if (isLegacyPass(user.pass) && !user.passUpgraded) {
-    setAuthLoading(false, 'login');
-    saveUser(user);
-    try { closeAuthModal(); } catch (e) {}
-    showForcePasswordChange(user);
-    return;
-  }
-  try { clearUserKeyCache(); } catch (e) {}
-  saveUser(user);
-  // Önceki kullanıcının bellek görünümü kalmasın
-  try { state._view = {}; state.data = {}; state.page = 'home'; } catch (e) {}
-  authSyncUser(user);
-  try { ensureCloudSession(user.email, user.pass); } catch (e) {}
-  try {
-    fetch(SB_URL + 'app_customers?email=eq.' + encodeURIComponent(user.email), {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': SB_KEY,
-        'Authorization': 'Bearer ' + SB_KEY,
-        'Prefer': 'return=minimal'
-      },
-      body: JSON.stringify({ last_login: new Date().toISOString(), updated_at: new Date().toISOString() })
-    }).catch(function(){});
-  } catch (e) {}
-  // abonelik / engel kontrolu (ağ beklemeden uygulamayı aç, doğrulamayı arkada yap)
-  var applyRow = function(c) {
-    if (!c) return false;
-    if (c.blocked) { setAuthLoading(false, 'login'); toast('Hesabınız engellenmiş'); doLogout(); return true; }
-    if (c.unlimited || c.subscribed || c.plan === 'active') {
-      user.plan = 'active'; user.unlimited = !!c.unlimited; saveUser(user);
-      try { var tb = document.getElementById('trialBox'); if (tb && trialDaysLeft() > 100) tb.innerHTML = 'Abonelik aktif'; } catch (e) {}
-    }
-    return false;
-  };
-  var enterNow = function() { setAuthLoading(false, 'login'); pushAct('Sisteme giriş yaptı'); toast('Giriş başarılı'); enterApp(); };
-  var cached = (window.__ymCust && window.__ymCust.email === user.email && Date.now() - window.__ymCust.t < 20000) ? window.__ymCust.row : null;
-  if (cached) { if (!applyRow(cached)) enterNow(); return; }
-  var fetchRow = function() {
-    var ctl = window.AbortController ? new AbortController() : null;
-    var to = setTimeout(function() { try { if (ctl) ctl.abort(); } catch (e) {} }, 3000);
-    return fetch(SB_URL + 'app_customers?email=eq.' + encodeURIComponent(user.email) + '&select=*', {
-      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }, signal: ctl ? ctl.signal : undefined
-    }).then(function(r) { clearTimeout(to); return r.json(); })
-      .then(function(rows) { return (rows && rows[0]) || null; })
-      .catch(function() { clearTimeout(to); return null; });
-  };
-  if (!isSubExpired()) { enterNow(); fetchRow().then(function(c) { applyRow(c); }); return; }
-  fetchRow().then(function(c) { if (!applyRow(c)) enterNow(); });
-  };
-  if (!user) {
-    authRemoteLogin(id, pass, finish, function() {
+    if (!user) {
       setAuthLoading(false, 'login');
-      if (id.indexOf('@') > 0 || tfaFindUser(id)) { authError('E-posta veya şifre hatalı. Şifrenizi unuttuysanız "Şifremi Unuttum" bağlantısını kullanın.'); try { tfaOfferLogin(id); } catch (e) {} }
-      else { authError('Hesap bulunamadı. Kayıt olun.'); showAuth('register'); }
+      authError('Giriş başarısız.');
+      return;
+    }
+    // Eski 6 haneli sayısal şifre -> zorunlu güncelleme
+    if (isLegacyPass(user.pass) && !user.passUpgraded) {
+      setAuthLoading(false, 'login');
+      saveUser(user);
+      try { closeAuthModal(); } catch (e) {}
+      showForcePasswordChange(user);
+      return;
+    }
+    try { clearUserKeyCache(); } catch (e) {}
+    saveUser(user);
+    try { state._view = {}; state.data = {}; state.page = 'home'; } catch (e) {}
+    // Her girişte Auth senkronu (diğer cihazlar için)
+    try {
+      ensureCloudSession(user.email, user.pass, true).then(function(sess) {
+        if (sess) {
+          user.authSynced = true;
+          try {
+            var us = readUsers();
+            us.forEach(function(x){ if (x.email === user.email) x.authSynced = true; });
+            writeUsers(us);
+          } catch (e) {}
+        }
+      });
+    } catch (e) {}
+    try {
+      fetch(SB_URL + 'app_customers?email=eq.' + encodeURIComponent(user.email), {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SB_KEY,
+          'Authorization': 'Bearer ' + SB_KEY,
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({ last_login: new Date().toISOString(), updated_at: new Date().toISOString() })
+      }).catch(function(){});
+    } catch (e) {}
+    var applyRow = function(c) {
+      if (!c) return false;
+      if (c.blocked) { setAuthLoading(false, 'login'); toast('Hesabınız engellenmiş'); doLogout(); return true; }
+      if (c.unlimited || c.subscribed || c.plan === 'active') {
+        user.plan = 'active'; user.unlimited = !!c.unlimited; saveUser(user);
+        try { var tb = document.getElementById('trialBox'); if (tb && trialDaysLeft() > 100) tb.innerHTML = 'Abonelik aktif'; } catch (e) {}
+      }
+      return false;
+    };
+    var enterNow = function() { setAuthLoading(false, 'login'); pushAct('Sisteme giriş yaptı'); toast('Giriş başarılı'); enterApp(); };
+    var cached = (window.__ymCust && window.__ymCust.email === user.email && Date.now() - window.__ymCust.t < 20000) ? window.__ymCust.row : null;
+    if (cached) { if (!applyRow(cached)) enterNow(); return; }
+    var fetchRow = function() {
+      var ctl = window.AbortController ? new AbortController() : null;
+      var to = setTimeout(function() { try { if (ctl) ctl.abort(); } catch (e) {} }, 3000);
+      return fetch(SB_URL + 'app_customers?email=eq.' + encodeURIComponent(user.email) + '&select=*', {
+        headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }, signal: ctl ? ctl.signal : undefined
+      }).then(function(r) { clearTimeout(to); return r.json(); })
+        .then(function(rows) { return (rows && rows[0]) || null; })
+        .catch(function() { clearTimeout(to); return null; });
+    };
+    if (!isSubExpired()) { enterNow(); fetchRow().then(function(c) { applyRow(c); }); return; }
+    fetchRow().then(function(c) { if (!applyRow(c)) enterNow(); });
+  };
+
+  // 1) Önce Supabase Auth (farklı cihaz/tarayıcı)
+  // 2) Olmazsa bu tarayıcıdaki yerel hesap
+  authRemoteLogin(id, pass, finish, function(errCode) {
+    var users = [];
+    try { users = JSON.parse(localStorage.getItem('ym2_users') || '[]'); } catch(e) {}
+    var localUser = users.find(function(u){
+      return (u.email === id || String(u.musteriNo) === id) && u.pass === pass;
     });
-    return;
-  }
-  finish(user);
+    if (localUser) {
+      // Yerel giriş OK — Auth'a da yazmayı dene ki sonraki cihazlar çalışsın
+      finish(localUser);
+      return;
+    }
+    setAuthLoading(false, 'login');
+    var e = String(errCode || (window.__ymLastAuthErr || ''));
+    if (e === 'email_not_confirmed' || /confirm|verify/i.test(e)) {
+      authError('E-posta doğrulanmamış. Supabase → Authentication → Providers → Email: "Confirm email" kapalı olmalı veya gelen doğrulama linkine tıklayın.');
+      return;
+    }
+    if (e === 'no_email' || e === 'musteri_no') {
+      authError('Bu müşteri no ile bulutta e-posta bulunamadı. E-posta adresinizle giriş deneyin.');
+      return;
+    }
+    if (id.indexOf('@') > 0) {
+      authError('E-posta veya şifre hatalı. Hesap yoksa kayıt olun; şifreyi unuttuysanız "Şifremi Unuttum" kullanın.');
+      try { tfaOfferLogin(id); } catch (ex) {}
+    } else {
+      authError('Hesap bulunamadı. E-posta ile deneyin veya kayıt olun.');
+      showAuth('register');
+    }
+  });
 };
 
 window.doLogout = function() {
@@ -7216,17 +7303,25 @@ window.cariExcelSablonIndir = cariExcelSablonIndir; /* onclick için global */
 function cariExcelSablonIndir(type) {
   var isM = type === 'musteri';
   var headers = isM
-    ? ['Müşteri Unvanı','Telefon','E-posta','VKN/TCKN','Adres','Bakiyesi','Para Birimi']
-    : ['Tedarikçi Unvanı','Telefon','E-posta','VKN/TCKN','Adres','Bakiyesi','Para Birimi'];
+    ? ['Müşteri Ünvanı','Müşteri Kodu','Adres','Vergi Dairesi','Vergi No','Kategori','E-Posta','Cep Telefonu','Yetkili Kişi Adı','Bakiyesi','Para Birimi']
+    : ['Tedarikçi Ünvanı','Tedarikçi Kodu','Adres','Vergi Dairesi','Vergi No','Kategori','E-Posta','Cep Telefonu','Yetkili Kişi Adı','Bakiyesi','Para Birimi'];
   var sample = isM
-    ? 'Örnek Müşteri A.Ş.;05551234567;ornek@mail.com;1234567890;İstanbul;1500,50;TL'
-    : 'Örnek Tedarikçi Ltd.;05557654321;tedarik@mail.com;0987654321;Ankara;0;TL';
+    ? [
+        'Fatih Bey;A1230;Örnek sok. No:16-A Kadıköy İstanbul;;;Market;;;;35,99;',
+        'Örnek Ticaret Ltd. Şti.;;;Başakşehir VD;123456789;;destek@orneksirketismi.com.tr;;Ahmet Güneş;123,33;EUR',
+        'Yunus Tekstil Ltd. Şti;JTKS1956;Örnek cad. No:16-A Kadıköy İstanbul;Kadıköy VD;159478632;Tekstil;jateks@detsek.com;212 123 4567;Fatih Bey;325,23;USD'
+      ].join('\n')
+    : [
+        'Market Hasan;T1230;Örnek cad. No:16-A Kadıköy İstanbul;;;Market;;555 555 5555;;321,23;USD',
+        'Örnek Ticaret Ltd. Şti.;;;Kozyatağı VD;123456789;;marketi@orneksirketismi.com.tr;;Ahmet Güneş;123,33;EUR',
+        'Bizim Tedarikçi A.Ş.;B154;CADDE BOSTAN;BAŞAKŞEHİR;1594786320;;tedarikci@iletisim.com;212 555 5555;Fatih Bey;5694,50;TL'
+      ].join('\n');
   var csv = headers.join(';') + '\n' + sample + '\n';
   var blob = new Blob(['\ufeff' + csv], {type:'text/csv;charset=utf-8'});
   var url = URL.createObjectURL(blob);
   var a = document.createElement('a');
   a.href = url;
-  a.download = isM ? 'yanmuhasebe-musteri-sablon.csv' : 'yanmuhasebe-tedarikci-sablon.csv';
+  a.download = isM ? 'yanmuhasebe_musteri_sablonu.csv' : 'yanmuhasebe_tedarikci_sablonu.csv';
   a.style.display = 'none';
   document.body.appendChild(a);
   a.click();
@@ -7342,19 +7437,84 @@ function cariExcelYukle(type, input) {
       rows = rows.filter(function(r) { return r.some(function(c) { return String(c || '').trim(); }); });
       if (rows.length < 2) { bitir(); toast('Dosyada veri yok'); return; }
       var list = dbGet(key) || [], added = 0, updated = 0;
+      function normH(h){
+        return String(h||'').replace(/^\uFEFF/,'').trim().toLocaleLowerCase('tr')
+          .replace(/ı/g,'i').replace(/İ/g,'i').replace(/ş/g,'s').replace(/Ş/g,'s')
+          .replace(/ğ/g,'g').replace(/Ğ/g,'g').replace(/ü/g,'u').replace(/Ü/g,'u')
+          .replace(/ö/g,'o').replace(/Ö/g,'o').replace(/ç/g,'c').replace(/Ç/g,'c')
+          .replace(/\s+/g,' ');
+      }
+      var head = (rows[0]||[]).map(normH);
+      function col(){
+        var names = Array.prototype.slice.call(arguments).map(normH);
+        for (var a=0;a<names.length;a++){
+          for (var b=0;b<head.length;b++){
+            if (head[b]===names[a] || head[b].indexOf(names[a])>=0 || names[a].indexOf(head[b])>=0) return b;
+          }
+        }
+        return -1;
+      }
+      var iUnvan = col('musteri unvani','tedarikci unvani','unvan','ad','firma','unvanı');
+      var iKod = col('musteri kodu','tedarikci kodu','kod','cari kod');
+      var iAdres = col('adres');
+      var iVd = col('vergi dairesi','vd');
+      var iVkn = col('vergi no','vkn','tckn','vkn/tckn');
+      var iKat = col('kategori','sinif','sınıf');
+      var iMail = col('e-posta','eposta','email','mail');
+      var iTel = col('cep telefonu','telefon','tel','gsm');
+      var iYet = col('yetkili kisi adi','yetkili kisi','yetkili','yetkili kişi adı');
+      var iBak = col('bakiyesi','bakiye');
+      var iPara = col('para birimi','para','doviz','currency');
+      if (iUnvan < 0) iUnvan = 0;
       for (var i = 1; i < rows.length; i++) {
         var cols = rows[i].map(function(c) { return String(c == null ? '' : c).trim(); });
-        if (!cols[0]) continue;
-        var unvan = cols[0], telefon = cols[1] || '', email = cols[2] || '', vkn = cols[3] || '', adres = cols[4] || '';
-        var bakiye = parseFloat((cols[5] || '0').replace(/\./g, '').replace(',', '.')) || 0;
-        var para = cols[6] || 'TL';
-        var existing = list.find(function(x) { return String(x.unvan || x.ad || '').toLowerCase() === unvan.toLowerCase(); });
+        var unvan = cols[iUnvan] || '';
+        if (!unvan) continue;
+        var kod = iKod>=0 ? (cols[iKod]||'') : '';
+        var adres = iAdres>=0 ? (cols[iAdres]||'') : '';
+        var vd = iVd>=0 ? (cols[iVd]||'') : '';
+        var vkn = iVkn>=0 ? (cols[iVkn]||'') : '';
+        var kat = iKat>=0 ? (cols[iKat]||'') : '';
+        var email = iMail>=0 ? (cols[iMail]||'') : '';
+        var telefon = iTel>=0 ? (cols[iTel]||'') : '';
+        var yetkili = iYet>=0 ? (cols[iYet]||'') : '';
+        var bakRaw = iBak>=0 ? (cols[iBak]||'0') : '0';
+        var bakiye = parseFloat(String(bakRaw).replace(/\s/g,'').replace(/\./g,'').replace(',', '.')) || 0;
+        if (String(bakRaw).indexOf(',')<0 && String(bakRaw).indexOf('.')>=0) {
+          bakiye = parseFloat(String(bakRaw).replace(/\s/g,'')) || 0;
+        }
+        var para = (iPara>=0 ? (cols[iPara]||'') : '') || 'TL';
+        para = String(para).toUpperCase().replace('DOLAR','USD').replace('EURO','EUR').replace('TRY','TL');
+        if (para === 'D') para = 'USD';
+        if (!para) para = 'TL';
+        var existing = list.find(function(x) {
+          if (kod && String(x.kod||x.musteriKodu||x.tedarikciKodu||'') === kod) return true;
+          return String(x.unvan || x.ad || '').toLowerCase() === unvan.toLowerCase();
+        });
         if (existing) {
-          existing.telefon = telefon || existing.telefon; existing.email = email || existing.email;
-          existing.vkn = vkn || existing.vkn; existing.adres = adres || existing.adres;
-          existing.bakiye = bakiye; existing.paraBirimi = para; updated++;
+          if (telefon) existing.telefon = telefon;
+          if (email) existing.email = email;
+          if (vkn) existing.vkn = vkn;
+          if (adres) existing.adres = adres;
+          if (vd) existing.vergiDairesi = vd;
+          if (kat) existing.kategori = kat;
+          if (yetkili) existing.yetkili = yetkili;
+          if (kod) { existing.kod = kod; if (isM) existing.musteriKodu = kod; else existing.tedarikciKodu = kod; }
+          existing.bakiye = bakiye;
+          existing.paraBirimi = para;
+          updated++;
         } else {
-          list.push({ id: uid(isM ? 'm' : 't'), unvan: unvan, ad: unvan, telefon: telefon, email: email, vkn: vkn, adres: adres, bakiye: bakiye, paraBirimi: para, aktif: true });
+          var row = {
+            id: uid(isM ? 'm' : 't'),
+            unvan: unvan, ad: unvan,
+            kod: kod,
+            musteriKodu: isM ? kod : undefined,
+            tedarikciKodu: !isM ? kod : undefined,
+            telefon: telefon, email: email, vkn: vkn, adres: adres,
+            vergiDairesi: vd, kategori: kat, yetkili: yetkili,
+            bakiye: bakiye, paraBirimi: para, aktif: true
+          };
+          list.push(row);
           added++;
         }
       }
@@ -8043,8 +8203,8 @@ function urunExcelImportPage(){
     '</div></div>';
 }
 window.urunExcelSablonIndir = function(){
-  var headers=['Ürün Adı','KDV Oranı','Satış Fiyatı','Alış Fiyatı','KDV Dahil mi?','Barkod','Ürün Kodu','Birim','Ürün Tipi','Stok','Kategori','Marka','Raf','Para Birimi','Açıklama'];
-  var sample=['Örnek Ürün','20','100,00','70,00','E','8690000000001','URN-001','Adet','S','10','Genel','','','TL',''];
+  var headers=['Ürün/Hizmet Adı','KDV Oranı','Ürün Tipi','Ürün Kodu','Barkodu','Markası','Kategorisi','Alış Fiyatı','Satış Fiyatı','KDV Dahil mi?','Para Birimi','Stok Miktarı','Birim'];
+  var sample=['Kamera','20','S','CAM001','8690123456789','Örnek','Kamera Tipli','890,46','1100','H','TL','12','Adet'];
   var lines=[headers.join(';'), sample.join(';')];
   // mevcut ürünleri de ekle (isteğe bağlı kolaylık)
   try{
@@ -8052,19 +8212,17 @@ window.urunExcelSablonIndir = function(){
       lines.push([
         u.ad||'',
         u.kdv!=null?String(u.kdv).replace('.',','):(u.satisKdv!=null?String(u.satisKdv):'20'),
-        String(u.satisFiyat!=null?u.satisFiyat:(u.fiyat||'')).replace('.',','),
-        String(u.alisFiyat!=null?u.alisFiyat:(u.alis||'')).replace('.',','),
-        (u.kdvDahil==='haric'||u.kdvDahil===false)?'H':'E',
-        u.barkod||'',
-        u.kod||'',
-        u.birim||'Adet',
         (u.tip==='stoksuz'||u.urunTipi==='stoksuz')?'H':'S',
-        u.stok!=null?u.stok:'',
-        u.kategori||'',
+        u.kod||'',
+        u.barkod||'',
         u.marka||'',
-        u.raf||'',
+        u.kategori||'',
+        String(u.alisFiyat!=null?u.alisFiyat:(u.alis||'')).replace('.',','),
+        String(u.satisFiyat!=null?u.satisFiyat:(u.fiyat||'')).replace('.',','),
+        (u.kdvDahil==='haric'||u.kdvDahil===false)?'H':'E',
         u.paraBirimi||u.currency||'TL',
-        (u.aciklama||'').replace(/[;\n\r]/g,' ')
+        u.stok!=null?u.stok:'',
+        u.birim||'Adet'
       ].join(';'));
     });
   }catch(e){}
@@ -8153,18 +8311,18 @@ window.urunExcelYukle = function(file){
         }
         return -1;
       }
-      var iAd=col('urun adi','urun ad','ad','name','product');
+      var iAd=col('urun/hizmet adi','urun hizmet adi','urun adi','urun ad','ad','name','product');
       var iKdv=col('kdv orani','kdv orani %','kdv','kdv %','kdv oran');
       var iSat=col('satis fiyati','satis','fiyat','sale');
       var iAlis=col('alis fiyati','alis','cost');
       var iDahil=col('kdv dahil mi','kdv dahil','dahil mi');
-      var iBarkod=col('barkod','barcode','ean');
+      var iBarkod=col('barkodu','barkod','barcode','ean');
       var iKod=col('urun kodu','kod','sku','code');
       var iBirim=col('birim','unit');
       var iTip=col('urun tipi','tip','type');
       var iStok=col('stok','stok miktari','stock','miktar');
-      var iKat=col('kategori','category');
-      var iMarka=col('marka','brand');
+      var iKat=col('kategorisi','kategori','category');
+      var iMarka=col('markasi','marka','brand');
       var iRaf=col('raf yeri','raf','shelf');
       var iPara=col('para birimi','para','currency','doviz');
       var iAcik=col('aciklama','aciklama','description','desc');
@@ -15746,106 +15904,254 @@ function ekstreHTML() {
   var v = state._view, t = v.tip, key = cariKey(t), c = dbGet(key).find(function(x){ return x.id === v.ekstre; });
   if (!c) { state._view = {}; return null; }
   var detayli = Number(v.mod) === 1;
+  var isM = t === 'musteri';
   var E = [];
-  dbGet(t === 'musteri' ? 'satislar' : 'alislar').forEach(function(s) {
-    if (String(t === 'musteri' ? s.musteriId : s.tedarikciId) !== String(c.id) && String(s.cariId) !== String(c.id)) return;
-    if (s.durum === 'iptal') return;
-    var borc = t === 'musteri' ? (Number(s.tutar) || 0) : 0;
-    var alacak = t === 'musteri' ? 0 : (Number(s.tutar) || 0);
-    if (t !== 'musteri') { borc = Number(s.tutar) || 0; alacak = 0; }
-    E.push({
-      d: s.tarih || s.created, vade: s.vade || s.tarih,
-      hareket: t === 'musteri' ? 'Satış' : 'Alış',
-      acik: s.aciklama || s.no || '',
-      odeme: '', borc: borc, alacak: alacak,
-      kalemler: s.kalemler || []
-    });
-    if (t === 'musteri' && Number(s.tahsil) > 0) {
-      E.push({ d: s.tarih || s.created, vade: s.vade || s.tarih, hareket: 'Tahsilat', acik: '', odeme: 'Nakit', borc: 0, alacak: Number(s.tahsil) || 0, kalemler: [] });
+  var belgeKey = isM ? 'satislar' : 'alislar';
+  var idField = isM ? 'musteriId' : 'tedarikciId';
+
+  (dbGet(belgeKey) || []).forEach(function(s) {
+    if (String(s[idField] || s.cariId || '') !== String(c.id)) return;
+    if (s.durum === 'iptal' || s.durum === 'taslak' || s.belgeTipi === 'proforma') return;
+    var tutar = Number(s.tutar) || Number(s.genelToplam) || 0;
+    if (tutar <= 0) return;
+    var no = s.no || s.belgeNo || '';
+    var sube = s.subeAd || s.sube || '';
+    var acik = '';
+    if (isM) {
+      acik = (sube ? '(Şube:' + sube + ') ' : '') + (no ? ('Satış No:' + no) : (s.aciklama || ''));
+    } else {
+      acik = s.aciklama || (no ? ('Alış No:' + no) : 'Alış');
     }
+    E.push({
+      d: s.tarih || s.created,
+      vade: s.vade || s.tarih || s.created,
+      hareket: isM ? 'Satış' : 'Alış',
+      belgeNo: no,
+      acik: acik,
+      odeme: '',
+      borc: isM ? tutar : tutar,
+      alacak: 0,
+      kalemler: Array.isArray(s.kalemler) ? s.kalemler : [],
+      sort: s.tarih || s.created || ''
+    });
   });
+
+  // Müşteriden alış / iade (tedarikçi değilse de cari üzerinde alış olabilir)
+  if (isM) {
+    (dbGet('alislar') || []).forEach(function(s) {
+      if (String(s.tedarikciId || s.cariId || s.musteriId || '') !== String(c.id)) return;
+      if (s.durum === 'iptal' || s.durum === 'taslak') return;
+      var tutar = Number(s.tutar) || 0;
+      if (tutar <= 0) return;
+      E.push({
+        d: s.tarih || s.created, vade: s.vade || s.tarih || s.created,
+        hareket: 'Alış', belgeNo: s.no || '',
+        acik: s.aciklama || 'Müşteriden Alınan Ürün/İade',
+        odeme: '', borc: 0, alacak: tutar,
+        kalemler: Array.isArray(s.kalemler) ? s.kalemler : [],
+        sort: s.tarih || s.created || ''
+      });
+    });
+  }
+
   (dbGet('odemeler') || []).forEach(function(o) {
     if (String(o.cariId) !== String(c.id)) return;
-    var isTah = o.tip === 'tahsilat';
+    var isTah = o.tip === 'tahsilat' || o.yon === 'giris';
+    // müşteri: tahsilat = alacak; ödeme = borç
+    // tedarikçi: ödeme (biz ödüyoruz) = alacak (borç düşer); tahsilat nadir
+    var tut = Number(o.tutar) || 0;
+    if (tut <= 0) return;
     E.push({
-      d: o.tarih, vade: o.tarih,
+      d: o.tarih || o.created, vade: o.tarih || o.created,
       hareket: isTah ? 'Tahsilat' : 'Ödeme',
+      belgeNo: o.belgeNo || '',
       acik: o.aciklama || '',
-      odeme: o.yontem || o.hesapAd || '',
-      borc: isTah ? 0 : (Number(o.tutar) || 0),
-      alacak: isTah ? (Number(o.tutar) || 0) : 0,
-      kalemler: []
+      odeme: o.yontem || o.hesapAd || o.odemeSekli || (isTah ? 'Nakit' : 'Nakit'),
+      borc: isTah ? 0 : tut,
+      alacak: isTah ? tut : 0,
+      kalemler: [],
+      sort: o.tarih || o.created || ''
     });
   });
+
   (dbGet('duzeltmeler') || []).forEach(function(o) {
     if (String(o.cariId) !== String(c.id)) return;
     var dlt = Number(o.delta) || 0;
+    if (!dlt) return;
     E.push({
-      d: o.tarih, vade: o.tarih,
+      d: o.tarih || o.created, vade: o.tarih || o.created,
       hareket: dlt >= 0 ? 'Borç Fişi' : 'Alacak Fişi',
+      belgeNo: '',
       acik: o.aciklama || 'Bakiye düzeltme',
-      odeme: '', borc: dlt > 0 ? dlt : 0, alacak: dlt < 0 ? -dlt : 0, kalemler: []
+      odeme: '',
+      borc: dlt > 0 ? dlt : 0,
+      alacak: dlt < 0 ? -dlt : 0,
+      kalemler: [],
+      sort: o.tarih || o.created || ''
     });
   });
-  E.sort(function(a, b){ return String(a.d).localeCompare(String(b.d)); });
+
+  E.sort(function(a, b){ return String(a.sort || a.d).localeCompare(String(b.sort || b.d)); });
+
   var run = 0, topBorc = 0, topAlacak = 0;
   var bodyRows = '';
+  var excelRows = [];
+  var minD = null, maxD = null;
+
+  function fmtN(n) {
+    n = Number(n) || 0;
+    return n.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+  function fmtNPlain(n) {
+    n = Number(n) || 0;
+    return n ? n.toFixed(2).replace('.', ',') : '';
+  }
+
   E.forEach(function(e) {
     topBorc += Number(e.borc) || 0;
     topAlacak += Number(e.alacak) || 0;
     run += (Number(e.borc) || 0) - (Number(e.alacak) || 0);
-    bodyRows += '<tr>' +
-      '<td>' + esc(fmtDate(e.d)) + '</td>' +
-      '<td>' + esc(fmtDate(e.vade)) + '</td>' +
-      '<td>' + esc(e.hareket) + '</td>' +
-      (detayli ? '<td></td>' : '') +
-      '<td>' + esc(e.acik) + '</td>' +
-      (detayli ? '<td></td><td></td><td></td>' : '') +
-      '<td>' + esc(e.odeme) + '</td>' +
-      '<td style="text-align:right">' + (e.borc ? Number(e.borc).toFixed(2) : '') + '</td>' +
-      '<td style="text-align:right">' + (e.alacak ? Number(e.alacak).toFixed(2) : '') + '</td>' +
-      '<td style="text-align:right">' + fmtMoney(run) + '</td></tr>';
-    if (detayli && e.kalemler && e.kalemler.length) {
-      e.kalemler.forEach(function(l) {
-        bodyRows += '<tr style="background:#fffbeb">' +
+    var ds = String(e.d || '').slice(0, 10);
+    if (ds) {
+      if (!minD || ds < minD) minD = ds;
+      if (!maxD || ds > maxD) maxD = ds;
+    }
+    var tarihS = fmtDate(e.d);
+    var vadeS = fmtDate(e.vade);
+    var bakS = fmtN(run) + ' TL';
+
+    if (detayli) {
+      bodyRows += '<tr>' +
+        '<td>' + esc(tarihS) + '</td>' +
+        '<td>' + esc(vadeS) + '</td>' +
+        '<td>' + esc(e.hareket) + '</td>' +
+        '<td>' + esc(e.belgeNo || '') + '</td>' +
+        '<td>' + esc(e.acik) + '</td>' +
+        '<td></td>' +
+        '<td>' + esc(e.odeme) + '</td>' +
+        '<td></td>' +
+        '<td class="r">' + (e.borc ? fmtN(e.borc) : '') + '</td>' +
+        '<td class="r">' + (e.alacak ? fmtN(e.alacak) : '') + '</td>' +
+        '<td class="r">' + esc(bakS) + '</td></tr>';
+      excelRows.push([tarihS, vadeS, e.hareket, e.belgeNo || '', e.acik, '', e.odeme, '', e.borc || '', e.alacak || '', bakS]);
+      (e.kalemler || []).forEach(function(l) {
+        var ad = l.ad || l.urun || '';
+        var miktar = (l.miktar != null ? l.miktar : '') + (l.miktar != null ? (' ' + (l.birim || 'Ad')) : '');
+        var fiyat = l.fiyat != null ? Number(l.fiyat) : '';
+        var tut = l.tutar != null ? Number(l.tutar) : ((Number(l.miktar) || 0) * (Number(l.fiyat) || 0));
+        bodyRows += '<tr class="ekstre-line">' +
           '<td></td><td></td><td></td><td></td>' +
-          '<td>' + esc(l.ad || l.urun || '') + '</td>' +
-          '<td>' + esc(String(l.miktar || '') + ' ' + (l.birim || 'Ad')) + '</td>' +
+          '<td>' + esc(ad) + '</td>' +
+          '<td>' + esc(miktar) + '</td>' +
           '<td></td>' +
-          '<td style="text-align:right">' + (l.fiyat != null ? Number(l.fiyat).toFixed(2) : '') + '</td>' +
-          '<td style="text-align:right">' + (l.tutar != null ? Number(l.tutar).toFixed(2) : '') + '</td>' +
-          '<td></td><td></td></tr>';
+          '<td class="r">' + (fiyat !== '' ? fmtN(fiyat) : '') + '</td>' +
+          '<td class="r">' + (e.borc ? (tut ? fmtN(tut) : '') : '') + '</td>' +
+          '<td class="r">' + (e.alacak ? (tut ? fmtN(tut) : '') : '') + '</td>' +
+          '<td></td></tr>';
+        excelRows.push(['', '', '', '', ad, miktar, '', fiyat !== '' ? fiyat : '', e.borc ? tut : '', e.alacak ? tut : '', '']);
       });
+    } else {
+      bodyRows += '<tr>' +
+        '<td>' + esc(tarihS) + '</td>' +
+        '<td>' + esc(vadeS) + '</td>' +
+        '<td>' + esc(e.hareket) + '</td>' +
+        '<td>' + esc(e.acik) + '</td>' +
+        '<td>' + esc(e.odeme) + '</td>' +
+        '<td class="r">' + (e.borc ? fmtN(e.borc) : '') + '</td>' +
+        '<td class="r">' + (e.alacak ? fmtN(e.alacak) : '') + '</td>' +
+        '<td class="r">' + esc(bakS) + '</td></tr>';
+      excelRows.push([tarihS, vadeS, e.hareket, e.acik, e.odeme, e.borc || '', e.alacak || '', bakS]);
     }
   });
-  bodyRows += '<tr style="font-weight:700;background:#f8fafc"><td colspan="' + (detayli ? 8 : 5) + '"></td>' +
-    '<td style="text-align:right">' + topBorc.toFixed(2) + '</td>' +
-    '<td style="text-align:right">' + topAlacak.toFixed(2) + '</td>' +
-    '<td style="text-align:right">' + fmtMoney(run) + '</td></tr>';
+
+  var totBak = fmtN(run) + ' TL';
+  if (detayli) {
+    bodyRows += '<tr class="ekstre-tot"><td colspan="8"></td>' +
+      '<td class="r">' + fmtN(topBorc) + '</td>' +
+      '<td class="r">' + fmtN(topAlacak) + '</td>' +
+      '<td class="r">' + esc(totBak) + '</td></tr>';
+    excelRows.push(['', '', '', '', '', '', '', '', topBorc, topAlacak, totBak]);
+  } else {
+    bodyRows += '<tr class="ekstre-tot"><td colspan="5"></td>' +
+      '<td class="r">' + fmtN(topBorc) + '</td>' +
+      '<td class="r">' + fmtN(topAlacak) + '</td>' +
+      '<td class="r">' + esc(totBak) + '</td></tr>';
+    excelRows.push(['', '', '', '', '', topBorc, topAlacak, totBak]);
+  }
+
+  var unvan = (c.unvan || c.ad || 'CARİ').toUpperCase();
+  var range = '';
+  if (minD || maxD) {
+    range = ' (' + fmtDate(minD || maxD) + ' - ' + fmtDate(maxD || minD) + ')';
+  }
   var baslik = detayli ? 'DETAYLI HESAP EKSTRESİ' : 'HESAP EKSTRESİ';
-  return '<div class="toolbar" style="margin-bottom:12px"><button type="button" class="btn" style="background:#f59e0b;color:#fff;border:0" onclick="state._view={detail:\'' + c.id + '\'};go(\'' + key + '\')">Geri Dön</button></div>' +
-    '<div class="card" style="overflow:hidden">' +
-    '<div style="background:#0369a1;color:#fff;padding:12px 16px;font-weight:700">' + esc((c.unvan || c.ad || '').toUpperCase()) + ' ' + baslik + '</div>' +
+  var thead = detayli
+    ? '<th>Tarih</th><th>Vade</th><th>Hareket</th><th>Belge No</th><th>Açıklama</th><th>Miktar</th><th>Ödeme</th><th>Fiyat</th><th>Borç</th><th>Alacak</th><th>Bakiye</th>'
+    : '<th>Tarih</th><th>Vade</th><th>Hareket</th><th>Açıklama</th><th>Ödeme</th><th>Borç</th><th>Alacak</th><th>Bakiye</th>';
+
+  // store for excel export
+  window.__ekstreExport = {
+    detayli: detayli,
+    unvan: unvan,
+    range: range,
+    baslik: baslik,
+    rows: excelRows,
+    headers: detayli
+      ? ['Tarih','Vade','Hareket','Belge No','Açıklama','Miktar','Ödeme','Fiyat','Borç','Alacak','Bakiye']
+      : ['Tarih','Vade','Hareket','Açıklama','Ödeme','Borç','Alacak','Bakiye']
+  };
+
+  return '<div class="toolbar" style="margin-bottom:12px">' +
+    '<button type="button" class="btn" style="background:#f59e0b;color:#fff;border:0" onclick="state._view={detail:\'' + c.id + '\'};go(\'' + key + '\')">Geri Dön</button>' +
+    '<button type="button" class="btn btn-lime" onclick="cariEkstreExcel()">Excel İndir</button>' +
+    '<button type="button" class="btn" style="background:#0ea5e9;color:#fff;border:0" onclick="cariEkstrePdf()">PDF / Yazdır</button>' +
+    '</div>' +
+    '<div class="card ekstre-card" style="overflow:hidden">' +
+    '<div class="ekstre-head">' +
+      '<div class="ekstre-title">' + esc(baslik) + '</div>' +
+      '<div class="ekstre-sub">' + esc(unvan + range) + '</div>' +
+    '</div>' +
     '<div class="card-b">' +
-    '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px">' +
-    '<div style="background:#fecaca;border-radius:10px;padding:14px"><div style="font-size:12px;color:#7f1d1d">Toplam Borç</div><div style="font-size:20px;font-weight:700;color:#991b1b">' + topBorc.toLocaleString('tr-TR',{minimumFractionDigits:2}) + '</div></div>' +
-    '<div style="background:#bae6fd;border-radius:10px;padding:14px"><div style="font-size:12px;color:#0c4a6e">Toplam Alacak</div><div style="font-size:20px;font-weight:700;color:#075985">' + topAlacak.toLocaleString('tr-TR',{minimumFractionDigits:2}) + '</div></div>' +
-    '<div style="background:#bbf7d0;border-radius:10px;padding:14px"><div style="font-size:12px;color:#14532d">Bakiye</div><div style="font-size:20px;font-weight:700;color:#166534">' + run.toLocaleString('tr-TR',{minimumFractionDigits:2}) + '</div></div>' +
+    '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px" class="no-print">' +
+    '<div style="background:#fecaca;border-radius:10px;padding:14px"><div style="font-size:12px;color:#7f1d1d">Toplam Borç</div><div style="font-size:20px;font-weight:700;color:#991b1b">' + fmtN(topBorc) + '</div></div>' +
+    '<div style="background:#bae6fd;border-radius:10px;padding:14px"><div style="font-size:12px;color:#0c4a6e">Toplam Alacak</div><div style="font-size:20px;font-weight:700;color:#075985">' + fmtN(topAlacak) + '</div></div>' +
+    '<div style="background:#bbf7d0;border-radius:10px;padding:14px"><div style="font-size:12px;color:#14532d">Bakiye</div><div style="font-size:20px;font-weight:700;color:#166534">' + fmtN(run) + '</div></div>' +
     '</div>' +
-    '<div style="margin-bottom:10px;display:flex;gap:8px">' +
-    '<button type="button" class="btn btn-lime" onclick="cariEkstreExcel()">Excel</button>' +
-    '<button type="button" class="btn" style="background:#f59e0b;color:#fff;border:0" onclick="window.print()">PDF</button>' +
-    '</div>' +
-    '<div style="overflow:auto"><table class="data"><thead><tr>' +
-    '<th>Tarih</th><th>Vade</th><th>Hareket</th>' + (detayli ? '<th>Belge No</th>' : '') +
-    '<th>Açıklama</th>' + (detayli ? '<th>Miktar</th><th>Ödeme</th><th>Fiyat</th>' : '<th>Ödeme</th>') +
-    '<th>Borç</th><th>Alacak</th><th>Bakiye</th></tr></thead><tbody>' + bodyRows + '</tbody></table></div>' +
-    '</div></div>';
+    '<div style="overflow:auto"><table class="data ekstre-table"><thead><tr>' + thead + '</tr></thead><tbody>' + bodyRows + '</tbody></table></div>' +
+    '</div></div>' +
+    '<style>' +
+    '.ekstre-head{background:#0369a1;color:#fff;padding:14px 16px}' +
+    '.ekstre-title{font-size:15px;font-weight:800;letter-spacing:.02em}' +
+    '.ekstre-sub{font-size:13px;opacity:.95;margin-top:4px}' +
+    '.ekstre-table th{background:#e0f2fe!important;color:#0c4a6e!important;font-weight:700}' +
+    '.ekstre-table td.r,.ekstre-table .r{text-align:right;font-variant-numeric:tabular-nums}' +
+    '.ekstre-line td{background:#fffbeb;color:#78350f;font-size:12.5px}' +
+    '.ekstre-tot td{font-weight:700;background:#f1f5f9!important}' +
+    '@media print{.no-print,.toolbar,.sidebar,.topbar{display:none!important}#content,.main,.ekstre-card{margin:0!important;box-shadow:none!important;border:0!important}.ekstre-head{background:#0369a1!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}}' +
+    '</style>';
 }
 window.cariEkstreExcel = function() {
-  toast('Excel hazırlanıyor…');
-  try { window.print(); } catch (e) {}
+  var x = window.__ekstreExport;
+  if (!x) return toast('Ekstre verisi yok');
+  var fname = (x.detayli ? 'detayli_hesap_ekstresi_' : 'hesap_ekstresi_') + String(x.unvan || 'cari').replace(/[^\wçğıöşüÇĞİÖŞÜ\- ]+/gi, '').slice(0, 40);
+  var meta = { subtitle: x.unvan + (x.range || '') };
+  if (typeof ymExportExcel === 'function') {
+    ymExportExcel(fname, x.baslik, x.headers, x.rows, meta);
+  } else {
+    // CSV fallback
+    var lines = [x.headers.join(';')].concat(x.rows.map(function(r){ return r.map(function(c){ return String(c == null ? '' : c).replace(/;/g, ','); }).join(';'); }));
+    var blob = new Blob(['\ufeff' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = fname + '.csv';
+    a.click();
+  }
+  toast('Excel indirildi');
 };
+window.cariEkstrePdf = function() {
+  try { window.print(); } catch (e) { toast('Yazdırma açılamadı'); }
+};
+
 wrapMode('musteriler',   function(){ return state._view.ekstre ? ekstreHTML() : null; });
 wrapMode('tedarikciler', function(){ return state._view.ekstre ? ekstreHTML() : null; });
 
@@ -17769,16 +18075,33 @@ function handleAuthHash() {
 /* Bu cihazda hesap yoksa (başka cihazda/mobilde açılmış veya şifresi sıfırlanmış) Supabase Auth ile giriş */
 function authRemoteLogin(id, pass, ok, fail) {
   var hdr = { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY };
-  var getEmail = id.indexOf('@') > 0 ? Promise.resolve(id)
-    : fetch(SB_URL + 'app_customers?musteri_no=eq.' + encodeURIComponent(id) + '&select=email', { headers: hdr })
-        .then(function(r) { return r.json(); }).then(function(rows) { return rows && rows[0] ? String(rows[0].email || '').toLowerCase() : null; });
+  var lastErr = '';
+  var getEmail = id.indexOf('@') > 0 ? Promise.resolve(String(id).toLowerCase())
+    : fetch(SB_URL + 'app_customers?musteri_no=eq.' + encodeURIComponent(id) + '&select=email,musteri_no', { headers: hdr })
+        .then(function(r) { return r.json(); }).then(function(rows) {
+          return rows && rows[0] ? String(rows[0].email || '').toLowerCase() : null;
+        }).catch(function() { lastErr = 'musteri_no'; return null; });
   getEmail.then(function(em) {
-    if (!em) throw 0;
-    /* Müşteri kaydını giriş (token) isteğiyle aynı anda çek: art arda beklemeyi kaldırır */
+    if (!em) { lastErr = lastErr || 'no_email'; throw 0; }
     var custP = fetch(SB_URL + 'app_customers?email=eq.' + encodeURIComponent(em) + '&select=*', { headers: hdr })
       .then(function(r) { return r.json(); }).catch(function() { return []; });
-    return fetch(AUTH_URL + 'token?grant_type=password', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ email: em, password: pass }) })
-      .then(function(r) { if (!r.ok) throw 0; return r.json(); }).then(function(j) { try { setCloudSession(j); } catch (e) {} return { em: em, custP: custP }; });
+    return fetch(AUTH_URL + 'token?grant_type=password', {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ email: em, password: pass })
+    }).then(function(r) {
+      return r.json().then(function(j) {
+        if (!r.ok) {
+          lastErr = (j && (j.error_description || j.msg || j.error)) || ('http_' + r.status);
+          // E-posta doğrulama zorunluysa net işaret
+          if (/confirm|verify|email/i.test(String(lastErr))) lastErr = 'email_not_confirmed';
+          if (/invalid.*credentials|invalid login/i.test(String(lastErr))) lastErr = 'bad_pass';
+          throw 0;
+        }
+        try { setCloudSession(j); } catch (e) {}
+        return { em: em, custP: custP, j: j };
+      });
+    });
   }).then(function(x) {
     var em = x.em;
     return x.custP.then(function(rows) {
@@ -17794,7 +18117,10 @@ function authRemoteLogin(id, pass, ok, fail) {
         writeUsers(users);
         setTimeout(function() { ok(u); }, 0);
       });
-  }).catch(function() { fail(); });
+  }).catch(function() {
+    try { window.__ymLastAuthErr = lastErr; } catch (e) {}
+    fail(lastErr);
+  });
 }
 
 /* Web hesabını Supabase Auth'a da kaydet (şifre sıfırlama ve mobil giriş için). Kullanıcı başına bir kez. */
